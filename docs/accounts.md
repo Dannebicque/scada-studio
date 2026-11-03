@@ -45,3 +45,11 @@ La page `/account` contient désormais le formulaire de connexion et un bouton d
 ## EN — Nuxt sign-in (development)
 
 The `/account` page now includes sign-in and sign-out controls. Nitro routes `POST /api/auth/login` and `POST /api/auth/logout` forward requests to Symfony. The Symfony `/api/auth/login` route is registered for `json_login`. First provision an account with `app:user:create`. In development, verify session cookie persistence, authenticated `GET /api/me`, and session invalidation on logout. **Do not expose publicly before CSRF protections, secure cookies, and integration session tests are validated.**
+
+## FR — annuaire des membres
+
+La page Nuxt `/access` permet aux propriétaires d'espaces de consulter les membres et leurs rôles. La route Nitro `GET /api/workspaces/{id}/members` transmet la session au backend ; le voter Symfony vérifie la permission de gestion. L'interface reste en lecture seule, en attendant la sécurisation des mutations de rôles et des invitations.
+
+## EN — member directory
+
+The Nuxt `/access` page lets workspace owners view members and their roles. The Nitro `GET /api/workspaces/{id}/members` route forwards the session to Symfony; the voter enforces workspace management permissions. The interface remains read-only until role mutations and invitations are secured.
