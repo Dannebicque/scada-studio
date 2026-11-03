@@ -17,3 +17,7 @@ The global status bar shows API availability and reading freshness; it **does no
 Use **Preview a layout** to temporarily add or remove value widgets. This preview is **local and not saved**: reloading the page discards changes. Server-side authorization and persistence are not implemented yet.
 
 The preview also supports **reordering widgets** with keyboard-accessible arrow buttons. No changes are saved.
+
+## Accounts and saving
+
+Future saved layouts will belong to a user account and workspace. Users will be able to keep personal dashboards and tag preferences (favorites and display names). The data model is being prepared; login and saving from the interface are not available yet.
