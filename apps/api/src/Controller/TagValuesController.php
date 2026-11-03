@@ -16,14 +16,17 @@ final class TagValuesController
     {
         $values = $em->getRepository(TagValue::class)->findAll();
         $result = [];
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $staleAfterSeconds = 30;
         foreach ($values as $item) {
             $result[] = [
                 'tagId' => $item->tag->id,
                 'value' => $item->value,
                 'observedAt' => $item->observedAt->format(\DateTimeInterface::ATOM),
+                'quality' => ($now->getTimestamp() - $item->observedAt->getTimestamp() > $staleAfterSeconds) ? 'stale' : 'good',
             ];
         }
 
-        return new JsonResponse(['values' => $result], headers: ['Cache-Control' => 'no-store']);
+        return new JsonResponse(['values' => $result, 'staleAfterSeconds' => $staleAfterSeconds], headers: ['Cache-Control' => 'no-store']);
     }
 }
