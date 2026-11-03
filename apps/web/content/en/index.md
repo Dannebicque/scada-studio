@@ -15,3 +15,7 @@ SCADA Studio is a read-only industrial monitoring prototype with a Nuxt frontend
 - [Connectors](/docs/en/connectors): learn about the MQTT connector and planned protocols.
 
 Telemetry currently stores **latest known values only**: there is no history store, equipment control, or dashboard editor yet.
+
+## Languages and timestamps
+
+The interface formats dates and times according to the selected language (FR/EN) and the browser's timezone. Telemetry timestamps are sent by the API with an explicit UTC marker.
