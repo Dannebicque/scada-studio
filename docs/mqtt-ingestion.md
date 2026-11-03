@@ -40,3 +40,35 @@ The source must exist, be enabled, and have connector type `mqtt`. Values must m
 ## Limitations
 
 The subscriber is intended for local prototyping, not production. It uses an anonymous broker bound to localhost, a basic bounded restart delay but no production-grade process supervisor, no persistent message history, and 5-second client polling. Do not expose the broker publicly. Production requires TLS/authentication, operational monitoring, and a proper MQTT client library. Historical retention is deferred to the persistence milestone.
+
+## Reconnection and graceful shutdown smoke test
+
+Run this test locally with the API database initialized, the demo MQTT source enabled, Docker Compose, and `mosquitto_pub` / `mosquitto_sub` installed.
+
+1. Start the broker and run `APP_ENV=dev php bin/console app:mqtt:consume` in a dedicated terminal.
+2. Publish a fresh reading (omit `observedAt` to use the receipt time):
+
+   ```bash
+   mosquitto_pub -h 127.0.0.1 -p 1883 \
+     -t scada/atelier-demo/automate-01/temperature -m '{"value":22.4}'
+   ```
+
+3. Confirm `Accepted` in the consumer output and the updated value in `GET /api/tag-values`.
+4. Stop the broker from the repository root:
+
+   ```bash
+   docker compose --env-file .env -f infra/compose.yaml stop mqtt
+   ```
+
+5. Confirm the consumer logs a disconnect and remains running. Restart the broker:
+
+   ```bash
+   docker compose --env-file .env -f infra/compose.yaml start mqtt
+   ```
+
+6. Publish `{"value":23.1}` to the same topic. Confirm that the subscriber reconnects, logs `Accepted`, and the API returns `23.1` with a newer timestamp.
+7. Press Ctrl+C in the consumer terminal. Confirm `MQTT consumer stopped.` and that no `mosquitto_sub` child process remains.
+
+The reconnect delay is bounded to 30 seconds. QoS 0 does **not** replay measurements published while the subscriber is disconnected. This is a manual broker-level smoke test, not a CI integration test; it should be run before considering the reconnect behavior validated.
+
+On Unix, install/enable the PHP `pcntl` extension for graceful signal handling. Without it, the OS can still terminate the command but the application-level shutdown handler is unavailable.
