@@ -12,21 +12,22 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class ManageWorkspaceMembersController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em, private readonly CsrfTokenManagerInterface $csrf) {}
+    public function __construct(private readonly EntityManagerInterface $em) {}
 
     #[Route('/api/workspaces/{id}/members/csrf', methods: ['GET'])]
-    public function token(string $id): JsonResponse
+    public function token(string $id, Request $request): JsonResponse
     {
         $workspace = $this->em->getRepository(Workspace::class)->find($id);
         if (!$workspace || !$this->isGranted(WorkspaceVoter::MANAGE, $workspace)) {
             return new JsonResponse(['error' => 'Not found'], 404);
         }
-        return new JsonResponse(['token' => $this->csrf->getToken('workspace-members-'.$id)->getValue()], headers: ['Cache-Control' => 'private, no-store']);
+        $session = $request->getSession();
+        $key = 'csrf_workspace_members_'.$id;
+        if (!$session->has($key)) $session->set($key, bin2hex(random_bytes(32)));
+        return new JsonResponse(['token' => $session->get($key)], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     #[Route('/api/workspaces/{id}/members', methods: ['POST'])]
@@ -93,7 +94,8 @@ final class ManageWorkspaceMembersController extends AbstractController
         if (!$workspace) return new JsonResponse(['error' => 'Not found'], 404);
         if (!$this->isGranted(WorkspaceVoter::MANAGE, $workspace)) return new JsonResponse(['error' => 'Forbidden'], 403);
         $token = $request->headers->get('X-CSRF-Token', '');
-        if (!$this->csrf->isTokenValid(new CsrfToken('workspace-members-'.$id, $token))) {
+        $expected = $request->getSession()->get('csrf_workspace_members_'.$id);
+        if (!is_string($expected) || !is_string($token) || !hash_equals($expected, $token)) {
             return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
         }
         return $workspace;
