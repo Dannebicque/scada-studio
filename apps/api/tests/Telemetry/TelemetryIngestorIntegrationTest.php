@@ -18,6 +18,9 @@ final class TelemetryIngestorIntegrationTest extends KernelTestCase
         self::bootKernel();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $ingestor = static::getContainer()->get(TelemetryIngestor::class);
+        if (!str_ends_with((string) $em->getConnection()->getDatabase(), '_test')) {
+            self::markTestSkipped('Requires a dedicated test database.');
+        }
         $workspace = new Workspace('Integration', 'integration-'.bin2hex(random_bytes(6)));
         $source = new DataSource($workspace, 'plc', 'PLC', 'mqtt');
         $tag = new Tag($source, 'temperature', 'Temperature', 'float');
