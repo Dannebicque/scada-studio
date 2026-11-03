@@ -74,6 +74,7 @@ async function logout() {
           </li>
         </ul>
       </section>
+      <NuxtLink to="/access" class="inline-block rounded-lg bg-sky-800 px-4 py-2 text-white">{{ fr ? "Gestion des accès" : "Access management" }}</NuxtLink>
       <button type="button" :disabled="submitting" class="rounded-lg border border-slate-300 px-4 py-2" @click="logout">{{ fr ? 'Se déconnecter' : 'Sign out' }}</button>
     </template>
     <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm" @click="refresh()">{{ fr ? 'Actualiser' : 'Refresh' }}</button>
