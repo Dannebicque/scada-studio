@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Entity\Dashboard;
 use App\Entity\DataSource;
 use App\Entity\Tag;
 use App\Entity\Unit;
@@ -67,6 +68,19 @@ final class LoadDemoCatalogCommand extends Command
         ] as [$key, $name, $type, $unitCode]) {
             if (!$tags->findOneBy(['source' => $source, 'key' => $key])) {
                 $this->em->persist(new Tag($source, $key, $name, $type, $unitCode ? $unitMap[$unitCode] : null));
+            }
+        }
+
+        $dashboard = $this->em->getRepository(Dashboard::class)->findOneBy(['workspace' => $workspace, 'slug' => 'atelier']);
+        if (!$dashboard) {
+            $dashboard = new Dashboard($workspace, 'Atelier — Vue générale', 'atelier');
+            $this->em->persist($dashboard);
+        }
+        $dashboard->widgets = [];
+        foreach (['temperature', 'humidite', 'pieces_produites', 'convoyeur_actif'] as $key) {
+            $tag = $tags->findOneBy(['source' => $source, 'key' => $key]);
+            if ($tag) {
+                $dashboard->widgets[] = ['type' => 'value', 'tagId' => $tag->id, 'title' => $tag->name];
             }
         }
 
