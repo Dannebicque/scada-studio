@@ -38,6 +38,9 @@ jobs:
       - name: Validate Composer metadata
         working-directory: apps/api
         run: composer validate --strict --no-check-publish
+      - name: Create Symfony environment file
+        working-directory: apps/api
+        run: printf 'APP_ENV=test\n' > .env
       - name: Install dependencies
         working-directory: apps/api
         run: composer install --no-interaction --prefer-dist --no-progress
