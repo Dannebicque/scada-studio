@@ -6,7 +6,7 @@ Les durées sont **des estimations indicatives**, pas des dates de livraison. Le
 | --- | --- | --- | --- |
 | L1 Socle | 2 semaines | Application démarrable + schéma versionné | CI verte, contrats documentés |
 | L2 Runtime | 2 semaines | Valeurs MQTT visibles dans widgets | Reconnexion, qualité de donnée, tests |
-| L3 Dashboard | 2 semaines | Dashboard éditable et persisté | Export/import, widgets enregistrables |
+| L3 Dashboard & UX | 2–3 semaines | Interface FR/EN, navigation moderne, dashboard éditable et persisté, fiches connecteurs | Widgets enregistrables, configuration documentée, accessibilité et tests |
 | L4 Synoptique | 3–4 semaines | Synoptique SVG interactif | Calques, symboles, binding |
 | L5 OPC UA & IA | 3 semaines | Source OPC UA + assistant proposant une configuration | Validation humaine, isolation réseau |
 | L6 Fiabilisation | 2 semaines | Démonstrateur documenté | Sécurité, performance, accessibilité, E2E |
@@ -24,3 +24,21 @@ Un environnement Docker local, un connecteur MQTT en lecture, un catalogue de ta
 
 ## Gouvernance
 Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, tests, dépendances et estimation. Priorités P0/P1/P2. Toute modification de contrat exige une décision d'architecture (ADR) et une stratégie de migration.
+
+## Exigences transversales frontend (à partir de L3)
+
+- **Internationalisation** : français par défaut, anglais disponible partout ; clés de traduction centralisées, pas de textes métier en dur dans les vues ; persistance du choix de langue, formats de date/nombre localisés, `lang` HTML cohérent. Couverture de chaque nouvel écran et vérification de l'absence de clés manquantes.
+- **Design system** : shell applicatif responsive, navigation claire (catalogue, dashboards, synoptiques, connecteurs), typographie et contrastes cohérents, états vides/chargement/erreur, retours d'action, densité adaptée à une supervision industrielle.
+- **Accessibilité** : navigation clavier, focus visible, titres structurés, libellés explicites, tableaux accessibles, contrastes, annonces non intrusives de la télémétrie ; vérification RGAA/WCAG dans la recette.
+- **Connecteurs** : catalogue des protocoles et capacités, statut de disponibilité, mode lecture seule, configuration par source (hôte/port, topics, QoS, authentification selon protocole), validation des paramètres, test de connexion, erreurs explicites. **Ne jamais exposer de secrets au frontend** ; aucune écriture sur les équipements dans le MVP.
+- **Qualité** : tests des traductions et parcours critiques, responsive mobile/tablette/desktop, documentation d'exploitation, séparation des contrats API et de la présentation.
+
+### Découpage L3
+
+1. **L3.1 — Fondations UX et FR/EN** : shell, navigation, sélecteur de langue, dictionnaires, composants de statut, pages existantes harmonisées.
+2. **L3.2 — Catalogue et connecteurs** : écran sources/connecteurs, explication du mapping MQTT, configuration et diagnostic ; distinguer les capacités effectives des fonctionnalités prévues.
+3. **L3.3 — Dashboard persistant** : modèle backend dashboard/widgets/layout, API par workspace, migrations, validation et tests.
+4. **L3.4 — Éditeur** : ajout/suppression de widgets, liaison aux tags, réorganisation responsive, sauvegarde et restauration, états qualité.
+5. **L3.5 — Import/export & recette** : schéma JSON versionné, validation à l'import, tests et documentation FR/EN.
+
+**Garde-fou :** la persistance historique de télémétrie reste reportée. Les graphiques de séries temporelles nécessitant un historique ne seront pas présentés comme opérationnels tant que ce stockage n'existe pas.
