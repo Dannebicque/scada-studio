@@ -29,7 +29,7 @@ final class TagValueTest extends TestCase
     public function testRejectsFloatForIntegerTag(): void
     {
         $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'count', 'Count', 'integer');
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         new TagValue($tag, 1.5);
     }
 
