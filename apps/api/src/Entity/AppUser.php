@@ -36,6 +36,7 @@ class AppUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string { return $this->email; }
     public function getPassword(): string { return $this->passwordHash; }
+    public function setPasswordHash(string $hash): void { $this->passwordHash = $hash; }
     public function getRoles(): array { return array_values(array_unique([...$this->roles, 'ROLE_USER'])); }
     public function eraseCredentials(): void {}
 }
