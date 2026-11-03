@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         working-directory: apps/api
         run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Create isolated test database
+        working-directory: apps/api
+        run: php bin/console doctrine:database:create --env=test --if-not-exists
       - name: Prepare isolated test schema
         working-directory: apps/api
         run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
