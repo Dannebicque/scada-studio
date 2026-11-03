@@ -13,7 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'tag')]
 #[ORM\UniqueConstraint(name: 'uniq_tag_source_key', columns: ['source_id', 'tag_key'])]
-#[ApiResource(operations: [new Get(), new GetCollection()], security: "is_granted('PUBLIC_ACCESS')")]
+#[ApiResource(operations: [new Get(), new GetCollection()])]
 class Tag
 {
     #[ORM\Id]
