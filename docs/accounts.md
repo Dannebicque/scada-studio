@@ -69,3 +69,11 @@ La gestion du compte et des accès utilise les types communs `app/types/access.t
 ## EN — shared frontend architecture
 
 Account and access pages share `app/types/access.ts`, the `useAccount()` composable (Nuxt cache key `current-account`), `useWorkspaceRoles()` for labels, and `app/components/access/RoleBadge.vue` and `RoleSelect.vue`. Pages consume these primitives instead of redefining types and labels. Authorization must remain enforced by Symfony: UI components are not a security boundary.
+
+## FR — composable des membres
+
+`app/composables/useWorkspaceMembers.ts` regroupe le chargement, les mutations CSRF, les états d'erreur, les filtres et la pagination. `app/components/access/AddMemberForm.vue` est un formulaire réutilisable à événement `add(email, role)` typé ; il réutilise `AccessRoleSelect`. La page `access.vue` conserve la sélection de l'espace, les confirmations utilisateur et l'assemblage des composants. Les formulaires ne sont réinitialisés qu'après une mutation réussie.
+
+## EN — members composable
+
+`app/composables/useWorkspaceMembers.ts` centralizes loading, CSRF-protected mutations, errors, filtering and pagination. `app/components/access/AddMemberForm.vue` exposes a typed `add(email, role)` event and reuses `AccessRoleSelect`. The `access.vue` page keeps workspace selection, user confirmations and composition. Forms are reset only after successful mutations.
