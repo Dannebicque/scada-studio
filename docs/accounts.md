@@ -85,3 +85,11 @@ Account and access pages share `app/types/access.ts`, the `useAccount()` composa
 ## EN — reusable member table
 
 `app/components/access/MembersTable.vue` owns the accessible table, role badges and inline role editor. Typed `changeRole(userId, role)` and `remove(member)` events delegate mutations to the parent; the component performs no HTTP requests or authorization checks. The last-owner UI guard complements, but never replaces, server-side enforcement.
+
+## FR — concurrence et dernier propriétaire
+
+Les opérations `PATCH` et `DELETE` sur les membres exécutent désormais la vérification du dernier propriétaire dans une transaction Doctrine qui verrouille pessimiste­ment la ligne `workspace`. Les modifications concurrentes d'un même espace sont ainsi sérialisées avant le décompte des propriétaires. Les réponses `409` protègent la dernière appartenance `owner`. Les tests HTTP couvrent également le refus des opérations anonymes `POST`, `PATCH` et `DELETE`. Il reste à exécuter un scénario de concurrence réel sur PostgreSQL et des tests d'intégration authentifiés.
+
+## EN — concurrency and last owner
+
+Member `PATCH` and `DELETE` operations now check last-owner protection inside a Doctrine transaction with a pessimistic lock on the `workspace` row. Concurrent changes to the same workspace are serialized before counting owners. HTTP `409` protects the last `owner` membership. HTTP tests also cover anonymous `POST`, `PATCH` and `DELETE` denial. A real PostgreSQL concurrency scenario and authenticated integration tests remain to be executed.
