@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { locale, setLocale } = useAppLocale()
+const { locale } = useAppLocale()
 const route = useRoute()
 const pages = {
   fr: {
@@ -63,7 +63,13 @@ function linkParts(value: string) {
     return match ? { label: match[1], href: match[2] ?? '' } : { label: part.replace(/\*\*/g, '').replace(/`/g, ''), href: '' }
   })
 }
-watch(lang, value => { if (locale.value !== value) setLocale(value) })
+// The application header is the single language selector.
+// Keep the current documentation page when switching languages.
+watch(locale, value => {
+  if (value !== lang.value) {
+    void navigateTo('/docs/' + value + '/' + slug.value, { replace: true })
+  }
+})
 </script>
 
 <template>
@@ -75,10 +81,6 @@ watch(lang, value => { if (locale.value !== value) setLocale(value) })
           <NuxtLink :to="'/docs/' + lang + '/' + link.slug" :aria-current="slug === link.slug ? 'page' : undefined" class="block rounded-lg px-3 py-2 text-sm hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-sky-700" :class="slug === link.slug ? 'bg-sky-100 font-semibold text-sky-900' : 'text-slate-700'">{{ link.title }}</NuxtLink>
         </li>
       </ul>
-      <div class="mt-5 flex gap-3 border-t border-slate-200 pt-4 text-sm">
-        <NuxtLink :to="'/docs/fr/' + slug" :aria-current="lang === 'fr' ? 'true' : undefined">FR</NuxtLink>
-        <NuxtLink :to="'/docs/en/' + slug" :aria-current="lang === 'en' ? 'true' : undefined">EN</NuxtLink>
-      </div>
     </nav>
     <article class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 sm:p-8">
       <template v-for="(block, index) in blocks" :key="index">
