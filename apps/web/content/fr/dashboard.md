@@ -15,3 +15,5 @@ La barre d'état globale indique la disponibilité de l'API et la fraîcheur des
 ## Prévisualiser une disposition
 
 Le bouton **Prévisualiser une disposition** permet d'ajouter ou retirer temporairement des widgets de valeurs. Cette prévisualisation est **locale et non enregistrée** : recharger la page annule les changements. Le contrôle des droits et la sauvegarde serveur sont encore à développer.
+
+La prévisualisation permet aussi de **réordonner les widgets** avec les boutons fléchés, utilisables au clavier. Aucun changement n'est sauvegardé.
