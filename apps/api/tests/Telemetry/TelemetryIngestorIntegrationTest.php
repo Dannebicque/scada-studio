@@ -21,7 +21,7 @@ final class TelemetryIngestorIntegrationTest extends KernelTestCase
         if (self::$kernel->getEnvironment() !== 'test'
             || $em->getConnection()->getDatabasePlatform()->getName() !== 'postgresql'
             || !str_ends_with((string) $em->getConnection()->getDatabase(), '_test')) {
-            self::markTestSkipped('Requires a dedicated test database.');
+            self::fail('Integration tests require APP_ENV=test and a dedicated PostgreSQL _test database.');
         }
         $workspace = new Workspace('Integration', 'integration-'.bin2hex(random_bytes(6)));
         $source = new DataSource($workspace, 'plc', 'PLC', 'mqtt');
