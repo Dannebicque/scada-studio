@@ -15,3 +15,5 @@ The global status bar shows API availability and reading freshness; it **does no
 ## Preview a layout
 
 Use **Preview a layout** to temporarily add or remove value widgets. This preview is **local and not saved**: reloading the page discards changes. Server-side authorization and persistence are not implemented yet.
+
+The preview also supports **reordering widgets** with keyboard-accessible arrow buttons. No changes are saved.
