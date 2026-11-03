@@ -42,18 +42,18 @@ final class ConsumeMqttCommand extends Command
             $startedAt = time();
 
             while (($line = fgets($pipes[1], 8192)) !== false) {
-            $parts = explode(' ', trim($line), 2);
-            if (count($parts) !== 2) {
-                continue;
+                $parts = explode(' ', trim($line), 2);
+                if (count($parts) !== 2) {
+                    continue;
+                }
+                try {
+                    $accepted = $this->ingestor->ingest($parts[0], $parts[1]);
+                    $output->writeln(($accepted ? '<info>Accepted</info> ' : '<comment>Ignored</comment> ').$parts[0]);
+                } catch (\Throwable $e) {
+                    $output->writeln('<error>Ingestion failed: '.$e->getMessage().'</error>');
+                    break;
+                }
             }
-            try {
-                $accepted = $this->ingestor->ingest($parts[0], $parts[1]);
-                $output->writeln(($accepted ? '<info>Accepted</info> ' : '<comment>Ignored</comment> ').$parts[0]);
-            } catch (\Throwable $e) {
-                $output->writeln('<error>Ingestion failed: '.$e->getMessage().'</error>');
-                break;
-            }
-        }
 
             fclose($pipes[1]);
             $error = stream_get_contents($pipes[2]);
@@ -65,6 +65,5 @@ final class ConsumeMqttCommand extends Command
             $output->writeln('<comment>Subscriber disconnected: '.$reason.'; reconnecting in '.$delay.'s.</comment>');
             sleep($delay);
         }
-
     }
 }
