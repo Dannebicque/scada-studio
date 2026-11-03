@@ -13,7 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'workspace')]
 #[ORM\UniqueConstraint(name: 'uniq_workspace_slug', columns: ['slug'])]
-#[ApiResource(operations: [new Get(), new GetCollection()], security: "is_granted('PUBLIC_ACCESS')")]
+#[ApiResource(operations: [new Get(), new GetCollection()])]
 class Workspace
 {
     #[ORM\Id]
