@@ -8,6 +8,7 @@ use App\Entity\Workspace;
 use App\Entity\WorkspaceMember;
 use App\Security\WorkspaceVoter;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -62,14 +63,17 @@ final class ManageWorkspaceMembersController extends AbstractController
         if (!is_array($data) || !in_array($data['role'] ?? null, ['viewer', 'editor', 'owner'], true)) {
             return new JsonResponse(['error' => 'Invalid role'], 422);
         }
-        $member = $this->findMember($workspace, $userId);
-        if (!$member) return new JsonResponse(['error' => 'Member not found'], 404);
-        if ($member->role === 'owner' && $data['role'] !== 'owner' && $this->ownerCount($workspace) <= 1) {
-            return new JsonResponse(['error' => 'Cannot demote last owner'], 409);
-        }
-        $member->role = $data['role'];
-        $this->em->flush();
-        return new JsonResponse(['success' => true]);
+        return $this->em->wrapInTransaction(function () use ($workspace, $userId, $data): JsonResponse {
+            // Serialize owner changes for a workspace, including concurrent requests.
+            $this->em->lock($workspace, LockMode::PESSIMISTIC_WRITE);
+            $member = $this->findMember($workspace, $userId);
+            if (!$member) return new JsonResponse(['error' => 'Member not found'], 404);
+            if ($member->role === 'owner' && $data['role'] !== 'owner' && $this->ownerCount($workspace) <= 1) {
+                return new JsonResponse(['error' => 'Cannot demote last owner'], 409);
+            }
+            $member->role = $data['role'];
+            return new JsonResponse(['success' => true]);
+        });
     }
 
     #[Route('/api/workspaces/{id}/members/{userId}', methods: ['DELETE'])]
@@ -77,14 +81,16 @@ final class ManageWorkspaceMembersController extends AbstractController
     {
         $workspace = $this->authorizedWorkspace($id, $request);
         if ($workspace instanceof JsonResponse) return $workspace;
-        $member = $this->findMember($workspace, $userId);
-        if (!$member) return new JsonResponse(['error' => 'Member not found'], 404);
-        if ($member->role === 'owner' && $this->ownerCount($workspace) <= 1) {
-            return new JsonResponse(['error' => 'Cannot remove last owner'], 409);
-        }
-        $this->em->remove($member);
-        $this->em->flush();
-        return new JsonResponse(['success' => true]);
+        return $this->em->wrapInTransaction(function () use ($workspace, $userId): JsonResponse {
+            $this->em->lock($workspace, LockMode::PESSIMISTIC_WRITE);
+            $member = $this->findMember($workspace, $userId);
+            if (!$member) return new JsonResponse(['error' => 'Member not found'], 404);
+            if ($member->role === 'owner' && $this->ownerCount($workspace) <= 1) {
+                return new JsonResponse(['error' => 'Cannot remove last owner'], 409);
+            }
+            $this->em->remove($member);
+            return new JsonResponse(['success' => true]);
+        });
     }
 
     private function authorizedWorkspace(string $id, Request $request): Workspace|JsonResponse
