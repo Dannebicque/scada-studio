@@ -77,3 +77,11 @@ Account and access pages share `app/types/access.ts`, the `useAccount()` composa
 ## EN — members composable
 
 `app/composables/useWorkspaceMembers.ts` centralizes loading, CSRF-protected mutations, errors, filtering and pagination. `app/components/access/AddMemberForm.vue` exposes a typed `add(email, role)` event and reuses `AccessRoleSelect`. The `access.vue` page keeps workspace selection, user confirmations and composition. Forms are reset only after successful mutations.
+
+## FR — tableau de membres réutilisable
+
+`app/components/access/MembersTable.vue` encapsule le tableau accessible, les badges de rôles et l'édition en ligne. Ses événements typés `changeRole(userId, role)` et `remove(member)` délèguent les mutations au parent ; aucune requête HTTP ni vérification d'autorisation ne réside dans le composant. Le blocage visuel du dernier propriétaire complète, sans remplacer, le contrôle Symfony.
+
+## EN — reusable member table
+
+`app/components/access/MembersTable.vue` owns the accessible table, role badges and inline role editor. Typed `changeRole(userId, role)` and `remove(member)` events delegate mutations to the parent; the component performs no HTTP requests or authorization checks. The last-owner UI guard complements, but never replaces, server-side enforcement.
