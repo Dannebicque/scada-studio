@@ -43,6 +43,9 @@ final class MqttMessageParser
             }
             try {
                 $observedAt = (new \DateTimeImmutable($message->observedAt))->setTimezone(new \DateTimeZone('UTC'));
+                if (\DateTimeImmutable::getLastErrors() !== false) {
+                    return null;
+                }
             } catch (\Exception) {
                 return null;
             }
