@@ -42,3 +42,11 @@ Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, t
 5. **L3.5 — Import/export & recette** : schéma JSON versionné, validation à l'import, tests et documentation FR/EN.
 
 **Garde-fou :** la persistance historique de télémétrie reste reportée. Les graphiques de séries temporelles nécessitant un historique ne seront pas présentés comme opérationnels tant que ce stockage n'existe pas.
+
+### Barre d'état système (L3.1 → L3.2)
+
+- [x] Bandeau commun responsive et bilingue : API joignable, qualité/fraîcheur des dernières mesures, heure de vérification.
+- [ ] Ajouter un véritable heartbeat backend du consommateur MQTT et un statut de connexion au broker ; ne pas déduire la connexion de la présence de mesures.
+- [ ] Étendre aux autres connecteurs et services, avec états normalisés `online/degraded/offline/unknown`, horodatage et détail consultable.
+- [ ] Ajouter les alertes et incidents persistants ultérieurement ; éviter de confondre alerte métier et état d'infrastructure.
+- [ ] Vérifier clavier, lecteurs d'écran, fréquence des annonces et contrastes ; pas d'annonces répétées à chaque polling.
