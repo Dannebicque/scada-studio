@@ -52,6 +52,9 @@ final class MqttMessageParserTest extends TestCase
         yield 'missing value' => [self::TOPIC, '{"observedAt":"2026-11-03T16:00:00Z"}'];
         yield 'json scalar' => [self::TOPIC, '12'];
         yield 'json array' => [self::TOPIC, '[1,2]'];
+        yield 'json array of object' => [self::TOPIC, '[{"value":1}]'];
+        yield 'empty json object' => [self::TOPIC, '{}'];
+        yield 'invalid calendar date' => [self::TOPIC, '{"value":1,"observedAt":"2026-02-30T12:00:00Z"}'];
         yield 'null timestamp' => [self::TOPIC, '{"value":1,"observedAt":null}'];
         yield 'invalid timestamp' => [self::TOPIC, '{"value":1,"observedAt":"yesterday"}'];
         yield 'future timestamp' => [self::TOPIC, '{"value":1,"observedAt":"2999-01-01T00:00:00Z"}'];
