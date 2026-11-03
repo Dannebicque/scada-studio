@@ -10,7 +10,7 @@ const links = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="flex min-h-screen flex-col bg-slate-50 text-slate-900">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-white focus:p-3">{{ t('skip') }}</a>
     <header class="border-b border-slate-200 bg-white">
       <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
@@ -27,8 +27,9 @@ const links = [
         <NuxtLink v-for="link in links" :key="link.to" :to="link.to" class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-sky-600" active-class="bg-sky-100 !text-sky-900" :exact-active-class="link.to === '/' ? 'bg-sky-100 !text-sky-900' : undefined">{{ t(link.key) }}</NuxtLink>
       </nav>
     </header>
-    <div id="main-content" class="mx-auto max-w-7xl px-5 py-8">
+    <div id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-5 py-8">
       <NuxtPage />
     </div>
+    <SystemStatusBar />
   </div>
 </template>
