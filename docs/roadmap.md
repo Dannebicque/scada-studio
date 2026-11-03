@@ -62,3 +62,11 @@ Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, t
 - [ ] Revoir les anciens documents racine `docs/*.md` et retirer les instructions obsolètes, ou les marquer comme archives techniques.
 
 **Règle de contribution :** une évolution fonctionnelle ne peut être déclarée terminée sans sa documentation utilisateur FR/EN et la mise à jour éventuelle des références techniques.
+
+### Correctif accessibilité documentation et dates (2026-11-03)
+
+- [x] Première consultation intégrée de `apps/web/content/{fr,en}` via les routes `/docs/fr/*` et `/docs/en/*`, sans dépendance externe (rendu Markdown minimal provisoire).
+- [x] Entrée Documentation dans la navigation et bascule FR/EN.
+- [x] Formatage centralisé des horodatages avec langue et fuseau horaire du navigateur ; sérialisation UTC explicite côté API.
+- [ ] Remplacer le rendu Markdown minimal par `@nuxt/content` avec lockfile, sommaire, recherche et rendu Markdown complet.
+- [ ] Tester en CI les routes documentaires, les formats de dates et le changement de fuseau horaire.
