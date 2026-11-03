@@ -36,11 +36,16 @@ final class ConsumeMqttCommand extends Command
 
         $attempt = 0;
         while (!$this->stopping) {
-            $process = proc_open(
+            try {
+                $process = proc_open(
                 ['mosquitto_sub', '-h', '127.0.0.1', '-p', '1883', '-q', '0', '-t', 'scada/+/+/+', '-F', '%t %p'],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
                 $pipes,
-            );
+                );
+            } catch (\Throwable $e) {
+                $output->writeln('<error>Cannot start mosquitto_sub: '.$e->getMessage().'</error>');
+                return Command::FAILURE;
+            }
             if (!is_resource($process)) {
                 $output->writeln('<error>Cannot start mosquitto_sub. Install mosquitto clients.</error>');
                 return Command::FAILURE;
