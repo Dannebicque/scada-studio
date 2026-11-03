@@ -27,7 +27,7 @@ mosquitto_pub -h 127.0.0.1 -p 1883 \
   -m '{"value":22.4,"observedAt":"2026-11-03T18:00:00Z"}'
 ```
 
-Use a current UTC timestamp for subsequent messages: older or duplicate timestamps are ignored. Check `GET /api/tag-values` or refresh the Nuxt catalog to see the latest reading.
+Use a current UTC timestamp for subsequent messages: older or duplicate timestamps are ignored. The read API marks samples older than 30 seconds as `stale`; the Nuxt catalog displays the status and polls every 5 seconds. Check `GET /api/tag-values` or refresh the Nuxt catalog to see the latest reading.
 
 ## Contract
 
@@ -39,4 +39,4 @@ The source must exist, be enabled, and have connector type `mqtt`. Values must m
 
 ## Limitations
 
-The subscriber is intended for local prototyping, not production. It uses an anonymous broker bound to localhost, no reconnect supervisor, no persistent message history, and manual page refresh. Do not expose the broker publicly. Production requires TLS/authentication, robust reconnect behavior, operational monitoring and a proper MQTT client library.
+The subscriber is intended for local prototyping, not production. It uses an anonymous broker bound to localhost, a basic bounded restart delay but no production-grade process supervisor, no persistent message history, and 5-second client polling. Do not expose the broker publicly. Production requires TLS/authentication, operational monitoring, and a proper MQTT client library. Historical retention is deferred to the persistence milestone.
