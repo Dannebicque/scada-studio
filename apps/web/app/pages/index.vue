@@ -1,34 +1,25 @@
 <script setup lang="ts">
 type Health = { status: 'ok'; service: string; timestamp: string }
-
-const { data, status, error, refresh } = await useFetch<Health>('/api/health', {
-  server: false,
-  retry: 0,
-})
+const { t } = useAppLocale()
+const { data, status, refresh } = await useFetch<Health>('/api/health', { server: false, retry: 0 })
 const isHealthy = computed(() => status.value === 'success' && data.value?.status === 'ok')
 </script>
 
 <template>
-  <main class="mx-auto max-w-4xl p-8">
-    <h1 class="text-3xl font-bold">SCADA Studio</h1>
-    <p class="mt-4">Socle Nuxt 4 — prototype en cours de construction.</p>
-
-    <section aria-labelledby="api-health-heading" class="mt-6 rounded-lg border p-4">
-      <h2 id="api-health-heading" class="text-lg font-semibold">État du backend</h2>
-      <p role="status" aria-live="polite" class="mt-2">
-        <template v-if="status === 'pending' || status === 'idle'">Vérification de l'API…</template>
-        <template v-else-if="isHealthy">API opérationnelle ({{ data?.service }})</template>
-        <template v-else>API indisponible{{ error ? ' : connexion impossible ou réponse invalide' : '' }}</template>
+  <main>
+    <header class="mb-8">
+      <p class="text-sm font-semibold uppercase tracking-widest text-sky-700">{{ t('workspace') }}</p>
+      <h1 class="mt-2 text-4xl font-bold tracking-tight">{{ t('overview') }}</h1>
+      <p class="mt-3 text-slate-600">{{ t('introduction') }}</p>
+    </header>
+    <section aria-labelledby="api-health-heading" class="max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 id="api-health-heading" class="text-lg font-semibold">{{ t('backend') }}</h2>
+      <p class="mt-3 text-sm" role="status" aria-live="polite">
+        <template v-if="status === 'pending' || status === 'idle'">{{ t('checking') }}</template>
+        <template v-else-if="isHealthy"><span class="font-semibold text-emerald-700">{{ t('healthy') }}</span> ({{ data?.service }})</template>
+        <template v-else><span class="font-semibold text-rose-700">{{ t('unavailable') }}</span></template>
       </p>
-      <button type="button" class="mt-3 rounded border px-3 py-2 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2" :disabled="status === 'pending'" @click="refresh()">
-        Actualiser
-      </button>
+      <button type="button" class="mt-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50" :disabled="status === 'pending'" @click="refresh()">{{ t('refresh') }}</button>
     </section>
-
-    <nav aria-label="Navigation principale" class="mt-6 flex gap-4">
-      <NuxtLink to="/dashboard">Dashboard</NuxtLink>
-      <NuxtLink to="/catalog">Catalogue</NuxtLink>
-      <NuxtLink to="/synoptic">Synoptique</NuxtLink>
-    </nav>
   </main>
 </template>
