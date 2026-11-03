@@ -5,8 +5,19 @@ type Catalog = {
   tags: { id: string; name: string; key: string; valueType: string; readOnly: boolean; unit: string | null }[]
 }
 const { data, status, error, refresh } = await useFetch<Catalog>('/api/catalog', { server: false, retry: 0 })
-const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string }[] }>('/api/tag-values', { server: false, retry: 0 })
+const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string; quality: 'good' | 'stale' }[]; staleAfterSeconds: number }>('/api/tag-values', { server: false, retry: 0, refresh: 5000 })
+const now = ref(Date.now())
+let clock: ReturnType<typeof setInterval> | undefined
+onMounted(() => { clock = setInterval(() => { now.value = Date.now() }, 1000) })
+onUnmounted(() => { if (clock) clearInterval(clock) })
 const valueByTag = computed(() => new Map((telemetry.value?.values ?? []).map(item => [item.tagId, item])))
+function qualityFor(tagId: string): string {
+  const sample = valueByTag.value.get(tagId)
+  if (!sample) return 'Aucune mesure'
+  const timestamp = Date.parse(sample.observedAt)
+  if (!Number.isFinite(timestamp)) return 'Horodatage invalide'
+  return now.value - timestamp > (telemetry.value?.staleAfterSeconds ?? 30) * 1000 ? 'Périmée' : 'Valide'
+}
 function refreshAll() { refresh(); refreshTelemetry() }
 </script>
 
@@ -14,7 +25,7 @@ function refreshAll() { refresh(); refreshTelemetry() }
   <main class="mx-auto max-w-5xl p-8">
     <NuxtLink to="/" class="underline">Retour à l'accueil</NuxtLink>
     <h1 class="mt-5 text-3xl font-bold">Catalogue de supervision</h1>
-    <p class="mt-2">Espaces, sources et points de mesure en lecture seule.</p>
+    <p class="mt-2">Espaces, sources et points de mesure en lecture seule. Mesures actualisées automatiquement toutes les 5 secondes ; périmées après 30 secondes.</p>
     <button type="button" class="mt-4 rounded border px-3 py-2" :disabled="status === 'pending'" @click="refreshAll()">Actualiser</button>
     <p v-if="status === 'pending' || status === 'idle'" role="status">Chargement…</p>
     <p v-else-if="error" role="alert">Catalogue indisponible. Vérifiez Symfony et PostgreSQL.</p>
@@ -33,8 +44,8 @@ function refreshAll() { refresh(); refreshTelemetry() }
         <h2 id="tags-heading" class="text-xl font-semibold">Tags ({{ data.tags.length }})</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
-            <thead><tr><th scope="col">Nom</th><th scope="col">Clé</th><th scope="col">Type</th><th scope="col">Unité</th><th scope="col">Accès</th><th scope="col">Dernière valeur</th><th scope="col">Horodatage</th></tr></thead>
-            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? 'Lecture seule' : 'Écriture déclarée' }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? new Date(valueByTag.get(item.id)!.observedAt).toLocaleString('fr-FR') : '—' }}</td></tr></tbody>
+            <thead><tr><th scope="col">Nom</th><th scope="col">Clé</th><th scope="col">Type</th><th scope="col">Unité</th><th scope="col">Accès</th><th scope="col">Dernière valeur</th><th scope="col">Horodatage</th><th scope="col">Qualité</th></tr></thead>
+            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? 'Lecture seule' : 'Écriture déclarée' }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? new Date(valueByTag.get(item.id)!.observedAt).toLocaleString('fr-FR') : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
           </table>
         </div>
       </section>
