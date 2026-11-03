@@ -17,7 +17,10 @@ watch(owned, async (workspaces) => {
     await load()
   }
 }, { immediate: true })
-async function addMember(email: string, role: WorkspaceRole) { await updateMember('POST', { email, role }) }
+const addMemberForm = ref<{ reset: () => void } | null>(null)
+async function addMember(email: string, role: WorkspaceRole) {
+  if (await updateMember('POST', { email, role })) addMemberForm.value?.reset()
+}
 const editing = ref('')
 const editRole = ref<WorkspaceRole>('viewer')
 async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: WorkspaceRole) {
@@ -95,7 +98,7 @@ async function removeMember(member: Member) {
         <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 class="text-lg font-semibold">{{ fr ? 'Ajouter un membre existant' : 'Add an existing member' }}</h2>
           <p class="mt-1 text-sm text-slate-500">{{ fr ? 'Le compte doit déjà avoir été créé dans SCADA Studio.' : 'The account must already exist in SCADA Studio.' }}</p>
-          <AccessAddMemberForm :busy="actionBusy" class="mt-4" @add="addMember" />
+          <AccessAddMemberForm ref="addMemberForm" :busy="actionBusy" class="mt-4" @add="addMember" />
           <p v-if="actionError" role="alert" class="mt-3 text-sm text-red-700">{{ actionError }}</p>
           <p v-if="actionSuccess" role="status" class="mt-3 text-sm text-green-800">{{ actionSuccess }}</p>
         </section>
