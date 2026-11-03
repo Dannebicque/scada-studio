@@ -37,3 +37,11 @@ Le voter Symfony `WorkspaceVoter` définit trois permissions : `WORKSPACE_VIEW`,
 The Symfony `WorkspaceVoter` defines `WORKSPACE_VIEW`, `WORKSPACE_EDIT`, and `WORKSPACE_MANAGE` permissions, delegating membership checks to `WorkspaceAccess`. Anonymous users and accounts without appropriate workspace membership are denied.
 
 `GET /api/workspaces/{id}/members` lists workspace members and roles **only for workspace owners**. Unauthenticated requests are rejected and non-owner members receive 403. The `app:user:create` CLI can also change existing memberships. Member administration in Nuxt and HTTP role updates are not yet available.
+
+## FR — connexion depuis Nuxt (développement)
+
+La page `/account` contient désormais le formulaire de connexion et un bouton de déconnexion. Les routes Nitro `POST /api/auth/login` et `POST /api/auth/logout` transmettent les requêtes à Symfony. La route Symfony `/api/auth/login` est enregistrée pour l'authenticator `json_login`. Créer d'abord un compte avec `app:user:create`. Vérifier en développement que les cookies de session sont bien conservés par le navigateur, que `GET /api/me` confirme la connexion et que la déconnexion invalide la session. **Ne pas déployer publiquement avant validation des protections CSRF, des cookies sécurisés et des tests d'intégration de session.**
+
+## EN — Nuxt sign-in (development)
+
+The `/account` page now includes sign-in and sign-out controls. Nitro routes `POST /api/auth/login` and `POST /api/auth/logout` forward requests to Symfony. The Symfony `/api/auth/login` route is registered for `json_login`. First provision an account with `app:user:create`. In development, verify session cookie persistence, authenticated `GET /api/me`, and session invalidation on logout. **Do not expose publicly before CSRF protections, secure cookies, and integration session tests are validated.**
