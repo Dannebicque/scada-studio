@@ -18,3 +18,7 @@ Start Symfony and Nuxt as usual, then open `/dashboard`. Publish telemetry with 
 This slice **does not expose dashboard write endpoints**: editing, widget placement, configuration forms, import/export and authorization are planned for subsequent L3 increments. JSON widget definitions are generated from known demo tags, not user-supplied input. Do not introduce public write operations without workspace authorization and server-side widget/tag validation.
 
 No time-series history is stored. Widgets show only the most recent value and its freshness.
+
+## Draft editor preview
+
+A local-only preview now allows adding and removing value widgets. It does **not** save anything to the API or database. The `WidgetLayoutValidator` service provides a foundation for future authorized writes, rejecting unsupported widgets, overlong layouts, and tags outside the target workspace. The write endpoint must remain disabled until authentication and workspace authorization are implemented.
