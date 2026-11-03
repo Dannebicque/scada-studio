@@ -19,3 +19,9 @@ Shared monitoring dashboards remain read-only (`Dashboard`). Personal dashboards
 After applying the migration, the schema is ready. The Doctrine user provider, Symfony login/logout check paths and `GET /api/me` are in place. **Account provisioning, a Nuxt login screen, and secured dashboard/tag write APIs are not yet implemented.** These entities are deliberately not exposed through API Platform.
 
 Before enabling persistence: establish secure Nuxt/Symfony sessions, CSRF protections, provisioning, workspace-scoped read/write checks, widget validation and cross-user authorization tests.
+
+## Update / Mise à jour — Account provisioning and private reads
+
+FR : la commande `php bin/console app:user:create email@example.org workspace-slug editor` crée un compte et/ou une appartenance à un espace existant. Le mot de passe initial est saisi de façon interactive. Les endpoints `GET /api/me/dashboards` et `GET /api/me/tags` retournent uniquement les données personnelles accessibles au compte authentifié. Les requêtes anonymes retournent 401. **Aucune écriture n'est exposée à ce stade** : il reste à finaliser les sessions Nuxt/Symfony et la protection CSRF.
+
+EN: `php bin/console app:user:create email@example.org workspace-slug editor` provisions an account or an additional membership in an existing workspace; the initial password is entered interactively. `GET /api/me/dashboards` and `GET /api/me/tags` only return data owned by the authenticated account and belonging to authorized workspaces. Anonymous requests receive 401. **Writes remain disabled** until Nuxt/Symfony sessions and CSRF protection are implemented.
