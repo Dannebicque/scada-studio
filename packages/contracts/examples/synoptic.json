@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-line-1",
+  "kind": "synoptic",
+  "title": "Ligne de démonstration",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "layers": [
+    {
+      "id": "process",
+      "name": "Process",
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "elements": [
+    {
+      "id": "motor-1",
+      "type": "industrial.motor",
+      "properties": {
+        "label": "Moteur principal"
+      },
+      "bindings": {
+        "state": "line1.motor1.state"
+      },
+      "layout": {
+        "x": 300,
+        "y": 180,
+        "width": 120,
+        "height": 90,
+        "rotation": 0
+      }
+    }
+  ]
+}
