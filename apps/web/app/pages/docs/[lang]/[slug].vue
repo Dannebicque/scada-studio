@@ -60,7 +60,7 @@ const blocks = computed<Block[]>(() => {
 function linkParts(value: string) {
   return value.split(/(\[[^\]]+\]\([^)]*\))/g).filter(Boolean).map(part => {
     const match = /^\[([^\]]+)\]\(([^)]*)\)$/.exec(part)
-    return match ? { label: match[1], href: match[2] } : { label: part.replace(/\*\*/g, '').replace(/`/g, ''), href: '' }
+    return match ? { label: match[1], href: match[2] ?? '' } : { label: part.replace(/\*\*/g, '').replace(/`/g, ''), href: '' }
   })
 }
 watch(lang, value => { if (locale.value !== value) setLocale(value) })
