@@ -28,21 +28,21 @@ final class MqttMessageParser
         }
 
         try {
-            $message = json_decode($payload, true, 16, JSON_THROW_ON_ERROR);
+            $message = json_decode($payload, false, 16, JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             return null;
         }
-        if (!is_array($message) || array_is_list($message) || !array_key_exists('value', $message)) {
+        if (!($message instanceof \stdClass) || !property_exists($message, 'value')) {
             return null;
         }
 
         $observedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-        if (array_key_exists('observedAt', $message)) {
-            if (!is_string($message['observedAt']) || !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/D', $message['observedAt'])) {
+        if (property_exists($message, 'observedAt')) {
+            if (!is_string($message->observedAt) || !preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/D', $message->observedAt)) {
                 return null;
             }
             try {
-                $observedAt = (new \DateTimeImmutable($message['observedAt']))->setTimezone(new \DateTimeZone('UTC'));
+                $observedAt = (new \DateTimeImmutable($message->observedAt))->setTimezone(new \DateTimeZone('UTC'));
             } catch (\Exception) {
                 return null;
             }
@@ -55,7 +55,7 @@ final class MqttMessageParser
             'workspace' => $parts[1],
             'source' => $parts[2],
             'tag' => $parts[3],
-            'value' => $message['value'],
+            'value' => $message->value,
             'observedAt' => $observedAt,
         ];
     }
