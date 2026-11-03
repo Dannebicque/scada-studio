@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { locale, t } = useAppLocale()
+const { locale, setLocale } = useAppLocale()
 const route = useRoute()
 const pages = {
   fr: {
@@ -63,7 +63,7 @@ function linkParts(value: string) {
     return match ? { label: match[1], href: match[2] } : { label: part.replace(/\*\*/g, '').replace(/`/g, ''), href: '' }
   })
 }
-watch(lang, value => { if (locale.value !== value) useAppLocale().setLocale(value) })
+watch(lang, value => { if (locale.value !== value) setLocale(value) })
 </script>
 
 <template>
