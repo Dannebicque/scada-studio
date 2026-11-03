@@ -72,3 +72,11 @@ Run this test locally with the API database initialized, the demo MQTT source en
 The reconnect delay is bounded to 30 seconds. QoS 0 does **not** replay measurements published while the subscriber is disconnected. This is a manual broker-level smoke test, not a CI integration test; it should be run before considering the reconnect behavior validated.
 
 On Unix, install/enable the PHP `pcntl` extension for graceful signal handling. Without it, the OS can still terminate the command but the application-level shutdown handler is unavailable.
+
+## Automated integration coverage
+
+The Backend GitHub Actions workflow now runs `bash infra/tests/mqtt-reconnect-smoke.sh` after PHPUnit. The smoke test starts a disposable Mosquitto container, seeds the isolated PostgreSQL test database, runs the Symfony consumer and HTTP API, checks the first telemetry sample, stops/restarts Mosquitto, verifies a newer sample, and sends SIGTERM to verify clean shutdown.
+
+Run it locally only with Docker, PHP CLI with `pcntl`, `mosquitto_pub`, Python 3, and an initialized **isolated** `APP_ENV=test` database. Port 1883 and 18080 must be free. It creates the demo catalog in that test database. CI results are the acceptance gate; adding the workflow alone does not prove a passing run.
+
+This covers process reconnection and the latest-value read API. It does not guarantee QoS 0 delivery during disconnection, exactly-once delivery, production readiness, or historical storage.
