@@ -17,13 +17,12 @@ watch(owned, async (workspaces) => {
     await load()
   }
 }, { immediate: true })
-const newEmail = ref('')
-const newRole = ref<WorkspaceRole>('viewer')
+async function addMember(email: string, role: WorkspaceRole) { await updateMember('POST', { email, role }) }
 const editing = ref('')
 const editRole = ref<WorkspaceRole>('viewer')
 async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: WorkspaceRole) {
-  const success = await updateMember(method, { userId, role, email: method === 'POST' ? newEmail.value : undefined })
-  if (success) { newEmail.value = ''; editing.value = '' }
+  const success = await updateMember(method, { userId, role })
+  if (success) editing.value = ''
 }
 function startEdit(member: Member) {
   editing.value = member.userId
@@ -96,17 +95,7 @@ async function removeMember(member: Member) {
         <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 class="text-lg font-semibold">{{ fr ? 'Ajouter un membre existant' : 'Add an existing member' }}</h2>
           <p class="mt-1 text-sm text-slate-500">{{ fr ? 'Le compte doit déjà avoir été créé dans SCADA Studio.' : 'The account must already exist in SCADA Studio.' }}</p>
-          <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="mutate('POST', undefined, newRole)">
-            <div class="min-w-56 flex-1">
-              <label for="new-member-email" class="block text-sm font-medium">{{ fr ? 'Adresse e-mail' : 'Email address' }}</label>
-              <input id="new-member-email" v-model.trim="newEmail" required type="email" autocomplete="off" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5">
-            </div>
-            <div>
-              <label for="new-member-role" class="block text-sm font-medium">{{ fr ? 'Rôle' : 'Role' }}</label>
-              <AccessRoleSelect id="new-member-role" v-model="newRole" :disabled="actionBusy" class="mt-1" />
-            </div>
-            <button type="submit" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-4 py-2.5 font-medium text-white disabled:opacity-50">{{ fr ? 'Ajouter' : 'Add member' }}</button>
-          </form>
+          <AccessAddMemberForm :busy="actionBusy" class="mt-4" @add="addMember" />
           <p v-if="actionError" role="alert" class="mt-3 text-sm text-red-700">{{ actionError }}</p>
           <p v-if="actionSuccess" role="status" class="mt-3 text-sm text-green-800">{{ actionSuccess }}</p>
         </section>
