@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scada-studio.local/schemas/telemetry-event.schema.json",
+  "title": "TelemetryEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tagId",
+    "timestamp",
+    "quality",
+    "value"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tagId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "quality": {
+      "enum": [
+        "good",
+        "uncertain",
+        "bad",
+        "stale"
+      ]
+    },
+    "value": {
+      "type": [
+        "number",
+        "string",
+        "boolean",
+        "null"
+      ]
+    },
+    "unit": {
+      "type": "string"
+    },
+    "sourceId": {
+      "type": "string"
+    }
+  }
+}
