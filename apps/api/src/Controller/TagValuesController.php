@@ -22,7 +22,7 @@ final class TagValuesController
             $result[] = [
                 'tagId' => $item->tag->id,
                 'value' => $item->value,
-                'observedAt' => $item->observedAt->format(\DateTimeInterface::ATOM),
+                'observedAt' => $item->observedAt->format('Y-m-d\\TH:i:s') . 'Z',
                 'quality' => ($now->getTimestamp() - $item->observedAt->getTimestamp() > $staleAfterSeconds) ? 'stale' : 'good',
             ];
         }
