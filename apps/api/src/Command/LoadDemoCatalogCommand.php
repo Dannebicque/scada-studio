@@ -24,7 +24,7 @@ final class LoadDemoCatalogCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if ($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? 'prod' === 'prod') {
+        if (($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? 'prod') === 'prod') {
             $output->writeln('<error>Demo catalog cannot be loaded in production.</error>');
             return Command::FAILURE;
         }
