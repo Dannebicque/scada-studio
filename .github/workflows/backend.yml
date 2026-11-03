@@ -54,3 +54,7 @@ jobs:
       - name: Run Symfony tests
         working-directory: apps/api
         run: php bin/phpunit
+      - name: Install MQTT smoke test client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mosquitto-clients
+      - name: MQTT broker restart integration test
+        run: bash infra/tests/mqtt-reconnect-smoke.sh
