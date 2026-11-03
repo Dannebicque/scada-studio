@@ -19,6 +19,27 @@ final class TagValueTest extends TestCase
         new TagValue($tag, 'true');
     }
 
+    public function testRejectsNonFiniteFloat(): void
+    {
+        $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'temperature', 'Temperature', 'float');
+        $this->expectException(\\InvalidArgumentException::class);
+        new TagValue($tag, INF);
+    }
+
+    public function testRejectsFloatForIntegerTag(): void
+    {
+        $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'count', 'Count', 'integer');
+        $this->expectException(\\InvalidArgumentException::class);
+        new TagValue($tag, 1.5);
+    }
+
+    public function testAcceptsBooleanFalse(): void
+    {
+        $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'running', 'Running', 'boolean');
+        $sample = new TagValue($tag, false);
+        self::assertFalse($sample->value);
+    }
+
     public function testStoresTimestampedValue(): void
     {
         $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'temperature', 'Temperature', 'float');
