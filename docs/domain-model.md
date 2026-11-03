@@ -20,17 +20,17 @@ Démarrer PostgreSQL, définir `DATABASE_URL` puis, en développement uniquement
 ```bash
 cd apps/api
 php bin/console doctrine:database:create --if-not-exists
-php bin/console doctrine:schema:update --dump-sql
-php bin/console doctrine:schema:update --force
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console app:demo:catalog
+php bin/console doctrine:schema:validate
 php bin/phpunit
 ```
 
-`schema:update --force` est réservé à ce prototype local : la migration versionnée et les fixtures restent à créer avant fusion. Les endpoints de collection sont accessibles via `/api/workspaces`, `/api/data_sources`, `/api/units`, `/api/tags` (vérifier les routes effectives avec `debug:router`).
+Une migration versionnée initialise le catalogue. La commande de démonstration est relançable et n'active pas la connexion à un automate. Elle est interdite en production. Les endpoints de collection sont accessibles via `/api/workspaces`, `/api/data_sources`, `/api/units`, `/api/tags` (vérifier les routes effectives avec `debug:router`).
 
 ## Suite
 
-- Migrer les entités vers des migrations Doctrine versionnées.
-- Ajouter fixtures et tests fonctionnels PostgreSQL.
+- Valider la migration et la commande de démonstration sur PostgreSQL, puis ajouter des tests d'intégration en CI.
 - Ajouter auth, autorisations par espace et DTO pour éviter l'exposition directe des entités.
 - Ajouter validation métier des clés et longueurs ; stockage chiffré des paramètres des connecteurs.
 - Relier le catalogue aux événements de télémétrie et aux historiques, sans commande d'actionneur dans le MVP.
