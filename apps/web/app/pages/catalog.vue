@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { locale, t } = useAppLocale()
+const { t } = useAppLocale()
+const { formatDateTime } = useLocalizedDateTime()
 type Catalog = {
   workspaces: { id: string; name: string; slug: string }[]
   sources: { id: string; name: string; connectorType: string; enabled: boolean }[]
@@ -47,7 +48,7 @@ function refreshAll() { refresh(); refreshTelemetry() }
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead><tr><th scope="col">{{ t('name') }}</th><th scope="col">{{ t('key') }}</th><th scope="col">{{ t('type') }}</th><th scope="col">{{ t('unit') }}</th><th scope="col">{{ t('access') }}</th><th scope="col">{{ t('lastValue') }}</th><th scope="col">{{ t('timestamp') }}</th><th scope="col">{{ t('quality') }}</th></tr></thead>
-            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? t('readOnly') : t('declaredWrite') }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? new Date(valueByTag.get(item.id)!.observedAt).toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB') : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
+            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? t('readOnly') : t('declaredWrite') }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? formatDateTime(valueByTag.get(item.id)!.observedAt) : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
           </table>
         </div>
       </section>
