@@ -1,6 +1,6 @@
 export const messages = {
   fr: {
-    home: 'Accueil', catalog: 'Catalogue', dashboard: 'Tableaux de bord', synoptic: 'Synoptiques', connectors: 'Connecteurs',
+    documentation: 'Documentation', home: 'Accueil', catalog: 'Catalogue', dashboard: 'Tableaux de bord', synoptic: 'Synoptiques', connectors: 'Connecteurs',
     language: 'Langue', navigation: 'Navigation principale', skip: 'Aller au contenu', workspace: 'Espace de supervision',
     overview: 'Vue d’ensemble', introduction: 'Supervision des équipements et des mesures en temps réel.',
     backend: 'État du backend', checking: 'Vérification de l’API…', healthy: 'API opérationnelle',
@@ -28,7 +28,7 @@ export const messages = {
     lastChecked: 'Dernière vérification', systemStatusNote: 'La disponibilité du broker MQTT n’est pas mesurée directement.',
   },
   en: {
-    home: 'Home', catalog: 'Catalog', dashboard: 'Dashboards', synoptic: 'Synoptics', connectors: 'Connectors',
+    documentation: 'Documentation', home: 'Home', catalog: 'Catalog', dashboard: 'Dashboards', synoptic: 'Synoptics', connectors: 'Connectors',
     language: 'Language', navigation: 'Main navigation', skip: 'Skip to content', workspace: 'Monitoring workspace',
     overview: 'Overview', introduction: 'Real-time equipment and telemetry monitoring.',
     backend: 'Backend status', checking: 'Checking API…', healthy: 'API operational',
