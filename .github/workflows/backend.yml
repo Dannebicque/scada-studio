@@ -11,6 +11,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: scada_test
+          POSTGRES_PASSWORD: scada_test
+          POSTGRES_DB: scada
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd 'pg_isready -U scada_test -d scada'
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APP_ENV: test
+      DATABASE_URL: 'postgresql://scada_test:scada_test@127.0.0.1:5432/scada?serverVersion=17&charset=utf8'
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -24,6 +41,9 @@ jobs:
       - name: Install dependencies
         working-directory: apps/api
         run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare isolated test schema
+        working-directory: apps/api
+        run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
       - name: Run Symfony tests
         working-directory: apps/api
         run: php bin/phpunit
