@@ -22,7 +22,7 @@ final class TagValueTest extends TestCase
     public function testRejectsNonFiniteFloat(): void
     {
         $tag = new Tag(new DataSource(new Workspace('Demo', 'demo'), 'plc', 'PLC', 'mqtt'), 'temperature', 'Temperature', 'float');
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         new TagValue($tag, INF);
     }
 
