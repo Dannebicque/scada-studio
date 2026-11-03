@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-dashboard",
+  "kind": "dashboard",
+  "title": "Vue d'ensemble",
+  "elements": [
+    {
+      "id": "temp",
+      "type": "core.value",
+      "properties": {
+        "label": "Température",
+        "unit": "°C"
+      },
+      "bindings": {
+        "value": "line1.motor1.temperature"
+      },
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 4,
+        "height": 2
+      }
+    }
+  ]
+}
