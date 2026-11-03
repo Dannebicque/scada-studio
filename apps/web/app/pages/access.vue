@@ -6,23 +6,10 @@ type Member = WorkspaceMember
 const { data: account, status: accountStatus, error: accountError, refresh: refreshAccount } = useAccount()
 const owned = computed(() => account.value?.workspaces.filter(w => w.role === 'owner') ?? [])
 const selected = ref('')
-const members = ref<Member[]>([])
-const loading = ref(false)
-const error = ref('')
-const search = ref('')
-const roleFilter = ref('all')
-const pageSize = 10
-const page = ref(1)
 const { roles, labels: roleLabels } = useWorkspaceRoles()
 const currentWorkspace = computed(() => owned.value.find(w => w.id === selected.value))
-const filtered = computed(() => members.value.filter(m =>
-  (roleFilter.value === 'all' || m.role === roleFilter.value)
-  && m.email.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()),
-))
-const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize)))
-const visible = computed(() => filtered.value.slice((page.value - 1) * pageSize, page.value * pageSize))
-const owners = computed(() => members.value.filter(m => m.role === 'owner').length)
-watch([search, roleFilter], () => { page.value = 1 })
+const { members, loading, error, actionBusy, actionError, actionSuccess, search, roleFilter, page, filtered, visible, totalPages, owners, load: loadMembers, mutate: updateMember } = useWorkspaceMembers(selected, refreshAccount)
+async function load() { await loadMembers(true) }
 watch(owned, async (workspaces) => {
   if (!workspaces.length) { selected.value = ''; members.value = []; return }
   if (!workspaces.some(w => w.id === selected.value)) {
@@ -30,59 +17,13 @@ watch(owned, async (workspaces) => {
     await load()
   }
 }, { immediate: true })
-async function load() {
-  const workspaceId = selected.value
-  members.value = []
-  error.value = ''
-  search.value = ''
-  roleFilter.value = 'all'
-  page.value = 1
-  if (!workspaceId) return
-  loading.value = true
-  try {
-    const result = await $fetch<{ members: Member[] }>(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`, { retry: 0 })
-    if (workspaceId === selected.value) members.value = result.members.sort((a, b) => a.email.localeCompare(b.email))
-  } catch {
-    if (workspaceId === selected.value) error.value = fr.value ? 'Impossible de récupérer les accès de cet espace.' : 'Unable to load access for this workspace.'
-  } finally {
-    if (workspaceId === selected.value) loading.value = false
-  }
-}
-const actionBusy = ref(false)
-const actionError = ref('')
-const actionSuccess = ref('')
 const newEmail = ref('')
 const newRole = ref<WorkspaceRole>('viewer')
 const editing = ref('')
 const editRole = ref<WorkspaceRole>('viewer')
-async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: string) {
-  if (!selected.value || actionBusy.value) return
-  actionBusy.value = true
-  actionError.value = ''
-  actionSuccess.value = ''
-  try {
-    const base = `/api/workspaces/${selected.value}/members`
-    const csrf = await $fetch<{ token: string }>(base + '/csrf', { retry: 0 })
-    await $fetch(base + (userId ? `/${userId}` : ''), {
-      method, headers: { 'X-CSRF-Token': csrf.token },
-      ...(method === 'DELETE' ? {} : { body: method === 'POST' ? { email: newEmail.value, role } : { role } }),
-      retry: 0,
-    })
-    newEmail.value = ''
-    editing.value = ''
-    await load()
-    await refreshAccount()
-    actionSuccess.value = fr.value ? 'Accès mis à jour.' : 'Access updated.'
-  } catch (e: unknown) {
-    const status = (e as { statusCode?: number })?.statusCode
-    actionError.value = status === 409
-      ? (fr.value ? 'Opération impossible : membre existant ou dernier propriétaire.' : 'Cannot update: existing member or last owner.')
-      : status === 404
-        ? (fr.value ? 'Compte introuvable.' : 'Account not found.')
-        : (fr.value ? 'Modification impossible. Vérifiez vos droits et réessayez.' : 'Unable to update access. Check permissions and retry.')
-  } finally {
-    actionBusy.value = false
-  }
+async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: WorkspaceRole) {
+  const success = await updateMember(method, { userId, role, email: method === 'POST' ? newEmail.value : undefined })
+  if (success) { newEmail.value = ''; editing.value = '' }
 }
 function startEdit(member: Member) {
   editing.value = member.userId
