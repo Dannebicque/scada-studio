@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'engineering_unit')]
-#[ApiResource(operations: [new Get(), new GetCollection()], security: "is_granted('PUBLIC_ACCESS')")]
+#[ApiResource(operations: [new Get(), new GetCollection()])]
 class Unit
 {
     #[ORM\Id]
