@@ -6,4 +6,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   vite: { plugins: [tailwindcss()] },
   typescript: { strict: true },
+  runtimeConfig: {
+    apiBaseUrl: 'http://127.0.0.1:8000',
+  },
 })
