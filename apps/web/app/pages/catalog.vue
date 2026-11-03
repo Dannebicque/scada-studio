@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { locale, t } = useAppLocale()
 type Catalog = {
   workspaces: { id: string; name: string; slug: string }[]
   sources: { id: string; name: string; connectorType: string; enabled: boolean }[]
@@ -14,39 +15,39 @@ onUnmounted(() => { if (clock) clearInterval(clock); if (poll) clearInterval(pol
 const valueByTag = computed(() => new Map((telemetry.value?.values ?? []).map(item => [item.tagId, item])))
 function qualityFor(tagId: string): string {
   const sample = valueByTag.value.get(tagId)
-  if (!sample) return 'Aucune mesure'
+  if (!sample) return t('noReading')
   const timestamp = Date.parse(sample.observedAt)
-  if (!Number.isFinite(timestamp)) return 'Horodatage invalide'
-  return now.value - timestamp > (telemetry.value?.staleAfterSeconds ?? 30) * 1000 ? 'Périmée' : 'Valide'
+  if (!Number.isFinite(timestamp)) return t('invalidTimestamp')
+  return now.value - timestamp > (telemetry.value?.staleAfterSeconds ?? 30) * 1000 ? t('stale') : t('valid')
 }
 function refreshAll() { refresh(); refreshTelemetry() }
 </script>
 
 <template>
-  <main class="mx-auto max-w-5xl p-8">
+  <main class="mx-auto max-w-6xl">
     <NuxtLink to="/" class="underline">Retour à l'accueil</NuxtLink>
-    <h1 class="mt-5 text-3xl font-bold">Catalogue de supervision</h1>
-    <p class="mt-2">Espaces, sources et points de mesure en lecture seule. Mesures actualisées automatiquement toutes les 5 secondes ; périmées après 30 secondes.</p>
-    <button type="button" class="mt-4 rounded border px-3 py-2" :disabled="status === 'pending'" @click="refreshAll()">Actualiser</button>
-    <p v-if="status === 'pending' || status === 'idle'" role="status">Chargement…</p>
-    <p v-else-if="error" role="alert">Catalogue indisponible. Vérifiez Symfony et PostgreSQL.</p>
+    <h1 class="mt-5 text-3xl font-bold">{{ t('catalogTitle') }}</h1>
+    <p class="mt-2">{{ t('catalogIntro') }}</p>
+    <button type="button" class="mt-4 rounded border px-3 py-2" :disabled="status === 'pending'" @click="refreshAll()">{{ t('refresh') }}</button>
+    <p v-if="status === 'pending' || status === 'idle'" role="status">{{ t('loading') }}</p>
+    <p v-else-if="error" role="alert">{{ t('catalogUnavailable') }}</p>
     <template v-else-if="data">
       <section aria-labelledby="workspaces-heading" class="mt-8">
-        <h2 id="workspaces-heading" class="text-xl font-semibold">Espaces ({{ data.workspaces.length }})</h2>
+        <h2 id="workspaces-heading" class="text-xl font-semibold">{{ t('workspaces') }} ({{ data.workspaces.length }})</h2>
         <ul><li v-for="item in data.workspaces" :key="item.id">{{ item.name }} — {{ item.slug }}</li></ul>
       </section>
       <section aria-labelledby="sources-heading" class="mt-8">
-        <h2 id="sources-heading" class="text-xl font-semibold">Sources ({{ data.sources.length }})</h2>
-        <ul><li v-for="item in data.sources" :key="item.id">{{ item.name }} — {{ item.connectorType }} ({{ item.enabled ? 'active' : 'inactive' }})</li></ul>
+        <h2 id="sources-heading" class="text-xl font-semibold">{{ t('sources') }} ({{ data.sources.length }})</h2>
+        <ul><li v-for="item in data.sources" :key="item.id">{{ item.name }} — {{ item.connectorType }} ({{ item.enabled ? t('active') : t('inactive') }})</li></ul>
       </section>
-      <p v-if="telemetryError" role="alert" class="mt-4">Valeurs de télémétrie indisponibles.</p>
-      <p v-else-if="telemetryStatus === 'pending'" role="status" class="mt-4">Chargement des mesures…</p>
+      <p v-if="telemetryError" role="alert" class="mt-4">{{ t('telemetryUnavailable') }}</p>
+      <p v-else-if="telemetryStatus === 'pending'" role="status" class="mt-4">{{ t('loadingTelemetry') }}</p>
       <section aria-labelledby="tags-heading" class="mt-8">
-        <h2 id="tags-heading" class="text-xl font-semibold">Tags ({{ data.tags.length }})</h2>
+        <h2 id="tags-heading" class="text-xl font-semibold">{{ t('tags') }} ({{ data.tags.length }})</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
-            <thead><tr><th scope="col">Nom</th><th scope="col">Clé</th><th scope="col">Type</th><th scope="col">Unité</th><th scope="col">Accès</th><th scope="col">Dernière valeur</th><th scope="col">Horodatage</th><th scope="col">Qualité</th></tr></thead>
-            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? 'Lecture seule' : 'Écriture déclarée' }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? new Date(valueByTag.get(item.id)!.observedAt).toLocaleString('fr-FR') : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
+            <thead><tr><th scope="col">{{ t('name') }}</th><th scope="col">{{ t('key') }}</th><th scope="col">{{ t('type') }}</th><th scope="col">{{ t('unit') }}</th><th scope="col">{{ t('access') }}</th><th scope="col">{{ t('lastValue') }}</th><th scope="col">{{ t('timestamp') }}</th><th scope="col">{{ t('quality') }}</th></tr></thead>
+            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? t('readOnly') : t('declaredWrite') }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? new Date(valueByTag.get(item.id)!.observedAt).toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB') : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
           </table>
         </div>
       </section>
