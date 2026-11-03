@@ -27,6 +27,7 @@ const isHealthy = computed(() => status.value === 'success' && data.value?.statu
 
     <nav aria-label="Navigation principale" class="mt-6 flex gap-4">
       <NuxtLink to="/dashboard">Dashboard</NuxtLink>
+      <NuxtLink to="/catalog">Catalogue</NuxtLink>
       <NuxtLink to="/synoptic">Synoptique</NuxtLink>
     </nav>
   </main>
