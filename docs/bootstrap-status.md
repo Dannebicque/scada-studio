@@ -1,27 +1,26 @@
 # État de la fondation L1
 
-## Présent sur la branche
-- Décisions d'architecture (ADR 0001 et 0002).
-- Nuxt 4/Tailwind : squelette initial, **non encore exécuté ni vérifié**.
-- Schémas JSON de télémétrie, pages et manifestes.
-- Exemples de dashboard et synoptique.
-- Compose PostgreSQL + broker MQTT **pour développement local uniquement**.
-- CI : validation JSON Schema et build/typecheck Nuxt.
+## Déjà présent
+- Nuxt 4, Tailwind 4, pages de navigation et ADR.
+- Contrats JSON Schema, exemples et workflow de validation.
+- Compose PostgreSQL/Mosquitto (développement local).
+- Script de bootstrap Symfony/API Platform **relançable**.
 
-## Non terminé
-- `apps/api` : squelette Symfony 8.1/API Platform et lockfile à générer via Composer.
-- `package-lock.json` : à produire par `npm install` puis versionner ; la CI frontend utilise `npm ci` et restera en échec sans lui.
-- Tests du backend, API, auth, connecteurs, runtime et persistance.
-- Vérification réelle des commandes `npm`, `composer` et `docker compose`.
+## Retours de l'installation du 3 novembre 2026
+- `npm install` réussit et produit un `package-lock.json` local à committer.
+- `nuxt build` échouait car `assets/css/main.css` était placé hors de `app/` ; correction dans `app/assets/css/main.css`.
+- `nuxt typecheck` échouait en l'absence du `tsconfig.json` racine du workspace Nuxt ; fichier ajouté.
+- Symfony 8.1 et API Platform 5 s'installent. `cache:clear` échouait faute de `api-platform/doctrine-orm` ; script corrigé.
+- `npm audit` signale 12 vulnérabilités : examiner les dépendances et les correctifs compatibles.
 
-## Commandes de reprise
+## Reprise locale
 ```bash
+git pull --ff-only
 npm install
 npm run typecheck:web
 npm run build:web
-python3 -m pip install 'jsonschema[format]>=4.23,<5'
-python3 scripts/validate-contracts.py
 bash scripts/bootstrap-backend.sh
+cd apps/api && php bin/console about
 ```
 
-Si Symfony 8.1 n'est pas disponible via Composer, **ne pas modifier la version sans décision explicite** : remonter le blocage sur #2 et choisir ensemble une version disponible.
+Ne pas fusionner avant de committer `package-lock.json`, `apps/api/composer.json`, `apps/api/composer.lock` et les sources/configurations Symfony générées, puis vérifier la CI. Ne jamais committer les dossiers `vendor/`, `node_modules/` ni les fichiers `.env.local`.
