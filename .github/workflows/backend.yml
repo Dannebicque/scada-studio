@@ -27,6 +27,7 @@ jobs:
           --health-retries 5
     env:
       APP_ENV: test
+      DEFAULT_URI: 'http://localhost'
       DATABASE_URL: 'postgresql://scada_test:scada_test@127.0.0.1:5432/scada?serverVersion=17&charset=utf8'
     steps:
       - uses: actions/checkout@v4
