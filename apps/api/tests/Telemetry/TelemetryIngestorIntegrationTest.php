@@ -8,6 +8,7 @@ use App\Entity\Tag;
 use App\Entity\TagValue;
 use App\Entity\Workspace;
 use App\Telemetry\TelemetryIngestor;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -19,7 +20,7 @@ final class TelemetryIngestorIntegrationTest extends KernelTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $ingestor = static::getContainer()->get(TelemetryIngestor::class);
         if (self::$kernel->getEnvironment() !== 'test'
-            || $em->getConnection()->getDatabasePlatform()->getName() !== 'postgresql'
+            || !($em->getConnection()->getDatabasePlatform() instanceof PostgreSQLPlatform)
             || !str_ends_with((string) $em->getConnection()->getDatabase(), '_test')) {
             self::fail('Integration tests require APP_ENV=test and a dedicated PostgreSQL _test database.');
         }
