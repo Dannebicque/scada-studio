@@ -7,7 +7,7 @@ security:
     providers:
         app_users:
             entity:
-                class: App\\Entity\\AppUser
+                class: App\Entity\AppUser
                 property: email
 
     firewalls:
