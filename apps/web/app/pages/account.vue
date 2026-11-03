@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { locale } = useAppLocale()
 const { data, status, error, refresh } = useAccount()
-const { labels: roleLabels } = useWorkspaceRoles()
 const fr = computed(() => locale.value === 'fr')
 const email = ref('')
 const password = ref('')
