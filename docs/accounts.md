@@ -53,3 +53,11 @@ La page Nuxt `/access` permet aux propriétaires d'espaces de consulter les memb
 ## EN — member directory
 
 The Nuxt `/access` page lets workspace owners view members and their roles. The Nitro `GET /api/workspaces/{id}/members` route forwards the session to Symfony; the voter enforces workspace management permissions. The interface remains read-only until role mutations and invitations are secured.
+
+## FR — modification des membres
+
+Depuis `/access`, un propriétaire peut désormais associer un compte **déjà existant** à un espace (`POST /api/workspaces/{id}/members`), changer son rôle (`PATCH /api/workspaces/{id}/members/{userId}`) ou retirer son accès (`DELETE` sur la même URL). Les rôles possibles sont `viewer`, `editor` et `owner`. La dernière appartenance `owner` est protégée contre la rétrogradation et la suppression (HTTP 409). Les opérations sont vérifiées côté serveur avec `WORKSPACE_MANAGE` et un jeton CSRF lié à la session, obtenu via `GET /api/workspaces/{id}/members/csrf` puis transmis dans `X-CSRF-Token`. Nuxt relaie le cookie de session. Il n'existe pas encore de création de compte ou d'invitation par e-mail depuis l'interface. **À vérifier avant production :** tests d'intégration avec PostgreSQL et sessions, cookies Secure/SameSite, politique d'origine, journalisation et concurrence sur le dernier propriétaire.
+
+## EN — managing members
+
+From `/access`, an owner can assign an **existing** account to a workspace (`POST /api/workspaces/{id}/members`), change a role (`PATCH /api/workspaces/{id}/members/{userId}`), or remove access (`DELETE` on the same URL). Supported roles: `viewer`, `editor`, `owner`. The last owner cannot be demoted or removed (HTTP 409). Server-side operations enforce `WORKSPACE_MANAGE` and a session-bound CSRF token retrieved from `GET /api/workspaces/{id}/members/csrf` and supplied through `X-CSRF-Token`. Nuxt forwards the session cookie. Account creation and email invitations are not yet available in the UI. **Before production:** validate PostgreSQL/session integration tests, Secure/SameSite cookies, origin policy, auditing, and concurrent last-owner changes.
