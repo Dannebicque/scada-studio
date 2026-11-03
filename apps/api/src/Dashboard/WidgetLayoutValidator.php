@@ -27,7 +27,7 @@ final class WidgetLayoutValidator
 
         $validated = [];
         foreach ($widgets as $widget) {
-            if (!is_array($widget) || array_keys($widget) !== ['type', 'tagId', 'title']) {
+            if (!is_array($widget) || count($widget) !== 3 || !array_key_exists('type', $widget) || !array_key_exists('tagId', $widget) || !array_key_exists('title', $widget)) {
                 throw new \InvalidArgumentException('Invalid widget definition.');
             }
             if ($widget['type'] !== 'value'
