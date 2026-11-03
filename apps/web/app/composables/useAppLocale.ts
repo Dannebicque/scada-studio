@@ -15,6 +15,9 @@ export const messages = {
     security: 'Sécurité', securityText: 'Le broker MQTT de démonstration est anonyme et limité à localhost. Ne pas l’exposer sur Internet.',
     configuration: 'Configuration', configurationText: 'Le paramétrage des connecteurs dans l’interface est prévu pour L3.2. Pour le moment, la configuration MQTT est locale.',
     details: 'Documentation technique',
+    systemStatus: 'État du système', apiOnline: 'API accessible', apiOffline: 'API indisponible', apiChecking: 'API : vérification',
+    telemetryFresh: 'Mesures récentes', telemetryStale: 'Mesures périmées', telemetryEmpty: 'Aucune mesure', telemetryUnknown: 'Télémétrie indisponible',
+    lastChecked: 'Dernière vérification', systemStatusNote: 'La disponibilité du broker MQTT n’est pas mesurée directement.',
   },
   en: {
     home: 'Home', catalog: 'Catalog', dashboard: 'Dashboards', synoptic: 'Synoptics', connectors: 'Connectors',
@@ -32,6 +35,9 @@ export const messages = {
     security: 'Security', securityText: 'The demo MQTT broker is anonymous and bound to localhost. Do not expose it to the Internet.',
     configuration: 'Configuration', configurationText: 'Connector settings in the UI are planned for L3.2. MQTT configuration is currently local.',
     details: 'Technical documentation',
+    systemStatus: 'System status', apiOnline: 'API reachable', apiOffline: 'API unavailable', apiChecking: 'API: checking',
+    telemetryFresh: 'Recent readings', telemetryStale: 'Stale readings', telemetryEmpty: 'No readings', telemetryUnknown: 'Telemetry unavailable',
+    lastChecked: 'Last checked', systemStatusNote: 'MQTT broker availability is not monitored directly.',
   },
 } as const
 
