@@ -52,6 +52,51 @@ async function load() {
     if (workspaceId === selected.value) loading.value = false
   }
 }
+const actionBusy = ref(false)
+const actionError = ref('')
+const actionSuccess = ref('')
+const newEmail = ref('')
+const newRole = ref<'viewer' | 'editor' | 'owner'>('viewer')
+const editing = ref('')
+const editRole = ref<'viewer' | 'editor' | 'owner'>('viewer')
+async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: string) {
+  if (!selected.value || actionBusy.value) return
+  actionBusy.value = true
+  actionError.value = ''
+  actionSuccess.value = ''
+  try {
+    const base = `/api/workspaces/${selected.value}/members`
+    const csrf = await $fetch<{ token: string }>(base + '/csrf', { retry: 0 })
+    await $fetch(base + (userId ? `/${userId}` : ''), {
+      method, headers: { 'X-CSRF-Token': csrf.token },
+      ...(method === 'DELETE' ? {} : { body: method === 'POST' ? { email: newEmail.value, role } : { role } }),
+      retry: 0,
+    })
+    newEmail.value = ''
+    editing.value = ''
+    await load()
+    await refreshAccount()
+    actionSuccess.value = fr.value ? 'Accès mis à jour.' : 'Access updated.'
+  } catch (e: unknown) {
+    const status = (e as { statusCode?: number })?.statusCode
+    actionError.value = status === 409
+      ? (fr.value ? 'Opération impossible : membre existant ou dernier propriétaire.' : 'Cannot update: existing member or last owner.')
+      : status === 404
+        ? (fr.value ? 'Compte introuvable.' : 'Account not found.')
+        : (fr.value ? 'Modification impossible. Vérifiez vos droits et réessayez.' : 'Unable to update access. Check permissions and retry.')
+  } finally {
+    actionBusy.value = false
+  }
+}
+function startEdit(member: Member) {
+  editing.value = member.userId
+  editRole.value = member.role
+  actionError.value = ''
+}
+async function removeMember(member: Member) {
+  if (!window.confirm(fr.value ? `Retirer l’accès de ${member.email} ?` : `Remove access for ${member.email}?`)) return
+  await mutate('DELETE', member.userId)
+}
 </script>
 
 <template>
@@ -111,6 +156,25 @@ async function load() {
           </div>
         </div>
 
+        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-semibold">{{ fr ? 'Ajouter un membre existant' : 'Add an existing member' }}</h2>
+          <p class="mt-1 text-sm text-slate-500">{{ fr ? 'Le compte doit déjà avoir été créé dans SCADA Studio.' : 'The account must already exist in SCADA Studio.' }}</p>
+          <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="mutate('POST', undefined, newRole)">
+            <div class="min-w-56 flex-1">
+              <label for="new-member-email" class="block text-sm font-medium">{{ fr ? 'Adresse e-mail' : 'Email address' }}</label>
+              <input id="new-member-email" v-model.trim="newEmail" required type="email" autocomplete="off" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5">
+            </div>
+            <div>
+              <label for="new-member-role" class="block text-sm font-medium">{{ fr ? 'Rôle' : 'Role' }}</label>
+              <select id="new-member-role" v-model="newRole" class="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5">
+                <option v-for="role in roles" :key="role" :value="role">{{ roleLabels[role] }}</option>
+              </select>
+            </div>
+            <button type="submit" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-4 py-2.5 font-medium text-white disabled:opacity-50">{{ fr ? 'Ajouter' : 'Add member' }}</button>
+          </form>
+          <p v-if="actionError" role="alert" class="mt-3 text-sm text-red-700">{{ actionError }}</p>
+          <p v-if="actionSuccess" role="status" class="mt-3 text-sm text-green-800">{{ actionSuccess }}</p>
+        </section>
         <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-5">
             <div>
@@ -143,11 +207,25 @@ async function load() {
           </div>
           <div v-else class="overflow-x-auto">
             <table class="w-full min-w-[32rem] text-left text-sm">
-              <thead class="bg-slate-50 text-slate-600"><tr><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Utilisateur' : 'User' }}</th><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Autorisation' : 'Permission' }}</th></tr></thead>
+              <thead class="bg-slate-50 text-slate-600"><tr><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Utilisateur' : 'User' }}</th><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Autorisation' : 'Permission' }}</th><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Actions' : 'Actions' }}</th></tr></thead>
               <tbody class="divide-y divide-slate-100">
                 <tr v-for="member in visible" :key="member.userId" class="hover:bg-slate-50">
                   <td class="px-5 py-4 font-medium text-slate-900">{{ member.email }}</td>
                   <td class="px-5 py-4"><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="member.role === 'owner' ? 'bg-sky-100 text-sky-900' : member.role === 'editor' ? 'bg-indigo-50 text-indigo-800' : 'bg-slate-100 text-slate-700'">{{ roleLabels[member.role] ?? member.role }}</span></td>
+                  <td class="px-5 py-4">
+                    <div v-if="editing === member.userId" class="flex flex-wrap items-center gap-2">
+                      <label :for="'edit-role-' + member.userId" class="sr-only">{{ fr ? 'Nouveau rôle' : 'New role' }}</label>
+                      <select :id="'edit-role-' + member.userId" v-model="editRole" class="rounded-lg border border-slate-300 bg-white px-2 py-2">
+                        <option v-for="role in roles" :key="role" :value="role">{{ roleLabels[role] }}</option>
+                      </select>
+                      <button type="button" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-3 py-2 text-white disabled:opacity-50" @click="mutate('PATCH', member.userId, editRole)">{{ fr ? 'Enregistrer' : 'Save' }}</button>
+                      <button type="button" class="rounded-lg border border-slate-300 px-3 py-2" @click="editing = ''">{{ fr ? 'Annuler' : 'Cancel' }}</button>
+                    </div>
+                    <div v-else class="flex flex-wrap gap-2">
+                      <button type="button" :disabled="actionBusy" class="rounded-lg border border-slate-300 px-3 py-2 hover:bg-slate-50 disabled:opacity-50" @click="startEdit(member)">{{ fr ? 'Modifier' : 'Edit' }}</button>
+                      <button type="button" :disabled="actionBusy || (member.role === 'owner' && owners <= 1)" class="rounded-lg border border-red-200 px-3 py-2 text-red-800 hover:bg-red-50 disabled:opacity-40" @click="removeMember(member)">{{ fr ? 'Retirer' : 'Remove' }}</button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -161,7 +239,7 @@ async function load() {
             </div>
           </div>
         </div>
-        <p class="rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-900">{{ fr ? 'Les autorisations sont actuellement consultables uniquement. La modification des membres sera activée après sécurisation des opérations.' : 'Permissions are currently read-only. Member changes will be enabled after securing write operations.' }}</p>
+        <p class="rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-900">{{ fr ? 'Seuls les propriétaires peuvent modifier les accès. Le dernier propriétaire ne peut pas être retiré.' : 'Only owners can manage access. The last owner cannot be removed.' }}</p>
       </section>
     </template>
   </main>
