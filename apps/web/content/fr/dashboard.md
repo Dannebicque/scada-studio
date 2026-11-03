@@ -17,3 +17,7 @@ La barre d'état globale indique la disponibilité de l'API et la fraîcheur des
 Le bouton **Prévisualiser une disposition** permet d'ajouter ou retirer temporairement des widgets de valeurs. Cette prévisualisation est **locale et non enregistrée** : recharger la page annule les changements. Le contrôle des droits et la sauvegarde serveur sont encore à développer.
 
 La prévisualisation permet aussi de **réordonner les widgets** avec les boutons fléchés, utilisables au clavier. Aucun changement n'est sauvegardé.
+
+## Comptes et sauvegarde
+
+La future sauvegarde sera liée à un compte utilisateur et à un espace de travail. Chaque utilisateur pourra conserver ses propres tableaux de bord et ses préférences de tags (favoris, noms affichés). Le modèle de données est en préparation ; la connexion et la sauvegarde depuis l'interface ne sont pas encore disponibles.
