@@ -71,16 +71,21 @@ final class LoadDemoCatalogCommand extends Command
             }
         }
 
+        // Persist newly created tags before looking them up for widget bindings.
+        $this->em->flush();
+
         $dashboard = $this->em->getRepository(Dashboard::class)->findOneBy(['workspace' => $workspace, 'slug' => 'atelier']);
         if (!$dashboard) {
             $dashboard = new Dashboard($workspace, 'Atelier — Vue générale', 'atelier');
             $this->em->persist($dashboard);
         }
-        $dashboard->widgets = [];
-        foreach (['temperature', 'humidite', 'pieces_produites', 'convoyeur_actif'] as $key) {
+        // Re-running the demo loader must not erase user-customized layouts.
+        if ($dashboard->widgets === []) {
+            foreach (['temperature', 'humidite', 'pieces_produites', 'convoyeur_actif'] as $key) {
             $tag = $tags->findOneBy(['source' => $source, 'key' => $key]);
             if ($tag) {
                 $dashboard->widgets[] = ['type' => 'value', 'tagId' => $tag->id, 'title' => $tag->name];
+            }
             }
         }
 
