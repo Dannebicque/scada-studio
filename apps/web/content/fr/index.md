@@ -15,3 +15,7 @@ SCADA Studio est un prototype de supervision industrielle en lecture seule, comp
 - [Connecteurs](/docs/fr/connectors) : comprendre le connecteur MQTT et les protocoles à venir.
 
 Les mesures sont des **dernières valeurs connues** : il n'y a pas encore d'historique, de commande d'équipement ni d'éditeur de dashboard.
+
+## Langues et horaires
+
+Les dates et heures de l'interface sont affichées selon la langue sélectionnée (FR/EN) et le fuseau horaire du navigateur. Les mesures sont transmises par l'API avec un horodatage UTC explicite.
