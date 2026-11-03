@@ -61,3 +61,11 @@ Depuis `/access`, un propriétaire peut désormais associer un compte **déjà e
 ## EN — managing members
 
 From `/access`, an owner can assign an **existing** account to a workspace (`POST /api/workspaces/{id}/members`), change a role (`PATCH /api/workspaces/{id}/members/{userId}`), or remove access (`DELETE` on the same URL). Supported roles: `viewer`, `editor`, `owner`. The last owner cannot be demoted or removed (HTTP 409). Server-side operations enforce `WORKSPACE_MANAGE` and a session-bound CSRF token retrieved from `GET /api/workspaces/{id}/members/csrf` and supplied through `X-CSRF-Token`. Nuxt forwards the session cookie. Account creation and email invitations are not yet available in the UI. **Before production:** validate PostgreSQL/session integration tests, Secure/SameSite cookies, origin policy, auditing, and concurrent last-owner changes.
+
+## FR — architecture frontend mutualisée
+
+La gestion du compte et des accès utilise les types communs `app/types/access.ts`, le composable `useAccount()` (clé de cache Nuxt `current-account`), `useWorkspaceRoles()` pour les libellés et les composants `app/components/access/RoleBadge.vue` et `RoleSelect.vue`. Les pages `account.vue` et `access.vue` consomment ces éléments au lieu de redéfinir les types et les libellés. Conserver les contrôles d'autorisation dans Symfony : les composants ne constituent jamais une frontière de sécurité.
+
+## EN — shared frontend architecture
+
+Account and access pages share `app/types/access.ts`, the `useAccount()` composable (Nuxt cache key `current-account`), `useWorkspaceRoles()` for labels, and `app/components/access/RoleBadge.vue` and `RoleSelect.vue`. Pages consume these primitives instead of redefining types and labels. Authorization must remain enforced by Symfony: UI components are not a security boundary.
