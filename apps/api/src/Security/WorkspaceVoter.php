@@ -7,6 +7,7 @@ use App\Entity\AppUser;
 use App\Entity\Workspace;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 
 final class WorkspaceVoter extends Voter
 {
@@ -21,7 +22,7 @@ final class WorkspaceVoter extends Voter
         return $subject instanceof Workspace && in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE], true);
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         $user = $token->getUser();
         if (!$user instanceof AppUser || !$subject instanceof Workspace) return false;
