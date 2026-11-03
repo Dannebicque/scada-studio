@@ -18,7 +18,9 @@ final class TelemetryIngestorIntegrationTest extends KernelTestCase
         self::bootKernel();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $ingestor = static::getContainer()->get(TelemetryIngestor::class);
-        if (!str_ends_with((string) $em->getConnection()->getDatabase(), '_test')) {
+        if (self::$kernel->getEnvironment() !== 'test'
+            || $em->getConnection()->getDatabasePlatform()->getName() !== 'postgresql'
+            || !str_ends_with((string) $em->getConnection()->getDatabase(), '_test')) {
             self::markTestSkipped('Requires a dedicated test database.');
         }
         $workspace = new Workspace('Integration', 'integration-'.bin2hex(random_bytes(6)));
