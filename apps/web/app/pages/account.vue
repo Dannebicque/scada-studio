@@ -1,11 +1,7 @@
 <script setup lang="ts">
 const { locale } = useAppLocale()
-type Account = {
-  authenticated: boolean
-  user?: { id: string; email: string }
-  workspaces: { id: string; name: string; role: string }[]
-}
-const { data, status, error, refresh } = await useFetch<Account>('/api/me', { server: false, retry: 0 })
+const { data, status, error, refresh } = useAccount()
+const { labels: roleLabels } = useWorkspaceRoles()
 const fr = computed(() => locale.value === 'fr')
 const email = ref('')
 const password = ref('')
@@ -70,11 +66,11 @@ async function logout() {
         <ul class="divide-y divide-slate-100">
           <li v-for="workspace in data.workspaces" :key="workspace.id" class="flex justify-between gap-4 py-3">
             <span>{{ workspace.name }}</span>
-            <span class="text-sm text-slate-600">{{ workspace.role }}</span>
+            <AccessRoleBadge :role="workspace.role" />
           </li>
         </ul>
       </section>
-      <NuxtLink to="/access" class="inline-block rounded-lg bg-sky-800 px-4 py-2 text-white">{{ fr ? "Gestion des accès" : "Access management" }}</NuxtLink>
+      <NuxtLink v-if="data.workspaces.some(workspace => workspace.role === 'owner')" to="/access" class="inline-block rounded-lg bg-sky-800 px-4 py-2 text-white">{{ fr ? "Gestion des accès" : "Access management" }}</NuxtLink>
       <button type="button" :disabled="submitting" class="rounded-lg border border-slate-300 px-4 py-2" @click="logout">{{ fr ? 'Se déconnecter' : 'Sign out' }}</button>
     </template>
     <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm" @click="refresh()">{{ fr ? 'Actualiser' : 'Refresh' }}</button>
