@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { locale, t } = useAppLocale()
+const { formatDateTime } = useLocalizedDateTime()
 type Widget = { type: string; tagId: string; title: string }
 type Dashboard = { id: string; name: string; slug: string; widgets: Widget[] }
 type Sample = { tagId: string; value: number | boolean | string; observedAt: string; quality: 'good' | 'stale' }
@@ -95,7 +96,7 @@ function formatValue(value: number | string | boolean | undefined): string {
             <span aria-hidden="true" class="h-2 w-2 rounded-full" :class="quality(values.get(widget.tagId)) === 'good' ? 'bg-emerald-600' : 'bg-amber-500'" />
             {{ quality(values.get(widget.tagId)) === 'good' ? t('telemetryFresh') : quality(values.get(widget.tagId)) === 'stale' ? t('telemetryStale') : t('dashboardNoValue') }}
           </p>
-          <p v-if="values.get(widget.tagId)?.observedAt" class="mt-2 text-xs text-slate-500">{{ new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(values.get(widget.tagId)!.observedAt)) }}</p>
+          <p v-if="values.get(widget.tagId)?.observedAt" class="mt-2 text-xs text-slate-500">{{ formatDateTime(values.get(widget.tagId)!.observedAt) }}</p>
         </article>
       </div>
     </section>
