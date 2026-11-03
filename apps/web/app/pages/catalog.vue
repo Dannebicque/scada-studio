@@ -5,11 +5,12 @@ type Catalog = {
   tags: { id: string; name: string; key: string; valueType: string; readOnly: boolean; unit: string | null }[]
 }
 const { data, status, error, refresh } = await useFetch<Catalog>('/api/catalog', { server: false, retry: 0 })
-const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string; quality: 'good' | 'stale' }[]; staleAfterSeconds: number }>('/api/tag-values', { server: false, retry: 0, refresh: 5000 })
+const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string; quality: 'good' | 'stale' }[]; staleAfterSeconds: number }>('/api/tag-values', { server: false, retry: 0 })
 const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | undefined
-onMounted(() => { clock = setInterval(() => { now.value = Date.now() }, 1000) })
-onUnmounted(() => { if (clock) clearInterval(clock) })
+let poll: ReturnType<typeof setInterval> | undefined
+onMounted(() => { clock = setInterval(() => { now.value = Date.now() }, 1000); poll = setInterval(() => { void refreshTelemetry() }, 5000) })
+onUnmounted(() => { if (clock) clearInterval(clock); if (poll) clearInterval(poll) })
 const valueByTag = computed(() => new Map((telemetry.value?.values ?? []).map(item => [item.tagId, item])))
 function qualityFor(tagId: string): string {
   const sample = valueByTag.value.get(tagId)
