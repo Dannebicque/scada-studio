@@ -13,7 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'data_source')]
 #[ORM\UniqueConstraint(name: 'uniq_source_workspace_key', columns: ['workspace_id', 'source_key'])]
-#[ApiResource(operations: [new Get(), new GetCollection()], security: "is_granted('PUBLIC_ACCESS')")]
+#[ApiResource(operations: [new Get(), new GetCollection()])]
 class DataSource
 {
     #[ORM\Id]
