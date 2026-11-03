@@ -1,16 +1,18 @@
 import { defineEventHandler, getRequestHeader, setResponseHeader, createError } from 'h3'
 
-export default defineEventHandler(async (event) => {
+type Account = { authenticated: boolean; user?: { id: string; email: string }; workspaces: { id: string; name: string; role: string }[] }
+
+export default defineEventHandler(async (event): Promise<Account> => {
+  setResponseHeader(event, 'Cache-Control', 'private, no-store')
   const base = useRuntimeConfig().apiBaseUrl.replace(/\/$/, '')
   const cookie = getRequestHeader(event, 'cookie')
   try {
-    return await $fetch(`${base}/api/me`, {
+    return await $fetch<Account>(`${base}/api/me`, {
       headers: cookie ? { cookie } : {},
       timeout: 3000,
       retry: 0,
     })
   } catch {
-    setResponseHeader(event, 'Cache-Control', 'no-store')
     throw createError({ statusCode: 503, statusMessage: 'Account API unavailable' })
   }
 })
