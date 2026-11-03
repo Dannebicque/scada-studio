@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import type { WorkspaceMember, WorkspaceRole } from '~/types/access'
 const { locale } = useAppLocale()
 const fr = computed(() => locale.value === 'fr')
-type Workspace = { id: string; name: string; role: string }
-type Account = { authenticated: boolean; workspaces: Workspace[] }
-type Member = { userId: string; email: string; role: 'viewer' | 'editor' | 'owner' }
-const { data: account, status: accountStatus, error: accountError, refresh: refreshAccount } = await useFetch<Account>('/api/me', { server: false, retry: 0 })
+type Member = WorkspaceMember
+const { data: account, status: accountStatus, error: accountError, refresh: refreshAccount } = useAccount()
 const owned = computed(() => account.value?.workspaces.filter(w => w.role === 'owner') ?? [])
 const selected = ref('')
 const members = ref<Member[]>([])
@@ -14,10 +13,7 @@ const search = ref('')
 const roleFilter = ref('all')
 const pageSize = 10
 const page = ref(1)
-const roles = ['viewer', 'editor', 'owner'] as const
-const roleLabels = computed<Record<string, string>>(() => fr.value
-  ? { viewer: 'Lecture', editor: 'Édition', owner: 'Propriétaire' }
-  : { viewer: 'Viewer', editor: 'Editor', owner: 'Owner' })
+const { roles, labels: roleLabels } = useWorkspaceRoles()
 const currentWorkspace = computed(() => owned.value.find(w => w.id === selected.value))
 const filtered = computed(() => members.value.filter(m =>
   (roleFilter.value === 'all' || m.role === roleFilter.value)
@@ -56,9 +52,9 @@ const actionBusy = ref(false)
 const actionError = ref('')
 const actionSuccess = ref('')
 const newEmail = ref('')
-const newRole = ref<'viewer' | 'editor' | 'owner'>('viewer')
+const newRole = ref<WorkspaceRole>('viewer')
 const editing = ref('')
-const editRole = ref<'viewer' | 'editor' | 'owner'>('viewer')
+const editRole = ref<WorkspaceRole>('viewer')
 async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: string) {
   if (!selected.value || actionBusy.value) return
   actionBusy.value = true
@@ -166,9 +162,7 @@ async function removeMember(member: Member) {
             </div>
             <div>
               <label for="new-member-role" class="block text-sm font-medium">{{ fr ? 'Rôle' : 'Role' }}</label>
-              <select id="new-member-role" v-model="newRole" class="mt-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5">
-                <option v-for="role in roles" :key="role" :value="role">{{ roleLabels[role] }}</option>
-              </select>
+              <AccessRoleSelect id="new-member-role" v-model="newRole" :disabled="actionBusy" class="mt-1" />
             </div>
             <button type="submit" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-4 py-2.5 font-medium text-white disabled:opacity-50">{{ fr ? 'Ajouter' : 'Add member' }}</button>
           </form>
@@ -211,13 +205,11 @@ async function removeMember(member: Member) {
               <tbody class="divide-y divide-slate-100">
                 <tr v-for="member in visible" :key="member.userId" class="hover:bg-slate-50">
                   <td class="px-5 py-4 font-medium text-slate-900">{{ member.email }}</td>
-                  <td class="px-5 py-4"><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="member.role === 'owner' ? 'bg-sky-100 text-sky-900' : member.role === 'editor' ? 'bg-indigo-50 text-indigo-800' : 'bg-slate-100 text-slate-700'">{{ roleLabels[member.role] ?? member.role }}</span></td>
+                  <td class="px-5 py-4"><AccessRoleBadge :role="member.role" /></td>
                   <td class="px-5 py-4">
                     <div v-if="editing === member.userId" class="flex flex-wrap items-center gap-2">
                       <label :for="'edit-role-' + member.userId" class="sr-only">{{ fr ? 'Nouveau rôle' : 'New role' }}</label>
-                      <select :id="'edit-role-' + member.userId" v-model="editRole" class="rounded-lg border border-slate-300 bg-white px-2 py-2">
-                        <option v-for="role in roles" :key="role" :value="role">{{ roleLabels[role] }}</option>
-                      </select>
+                      <AccessRoleSelect :id="'edit-role-' + member.userId" v-model="editRole" :disabled="actionBusy" />
                       <button type="button" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-3 py-2 text-white disabled:opacity-50" @click="mutate('PATCH', member.userId, editRole)">{{ fr ? 'Enregistrer' : 'Save' }}</button>
                       <button type="button" class="rounded-lg border border-slate-300 px-3 py-2" @click="editing = ''">{{ fr ? 'Annuler' : 'Cancel' }}</button>
                     </div>
