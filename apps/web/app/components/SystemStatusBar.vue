@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { locale, t } = useAppLocale()
+const { t } = useAppLocale()
+const { formatTime } = useLocalizedDateTime()
 type Sample = { observedAt: string; quality: 'good' | 'stale' }
 type Snapshot = { values: Sample[]; staleAfterSeconds: number }
 const { data: health, status: healthStatus, error: healthError, refresh: refreshHealth } = await useFetch<{ status: string }>('/api/health', { server: false, retry: 0 })
@@ -44,7 +45,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); if (clock) clearInterval(cl
         {{ telemetryLabel }}
         <span v-if="telemetry?.values.length">({{ recentCount }} / {{ telemetry.values.length }})</span>
       </span>
-      <span v-if="lastChecked" class="text-xs text-slate-500">{{ t('lastChecked') }} : {{ new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(lastChecked) }}</span>
+      <span v-if="lastChecked" class="text-xs text-slate-500">{{ t('lastChecked') }} : {{ formatTime(lastChecked) }}</span>
       <span class="w-full text-xs text-slate-500">{{ t('systemStatusNote') }}</span>
     </div>
   </footer>
