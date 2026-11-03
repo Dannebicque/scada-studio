@@ -16,7 +16,7 @@ final class Version20261103174000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->abortIf($this->connection->getDatabasePlatform()::class !== \Doctrine\DBAL\Platforms\PostgreSQLPlatform::class, 'Migration only supported on PostgreSQL.');
+        $this->abortIf(!$this->connection->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform, 'Migration only supported on PostgreSQL.');
 
         $this->addSql('CREATE TABLE workspace (id VARCHAR(36) NOT NULL, name VARCHAR(100) NOT NULL, slug VARCHAR(100) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE UNIQUE INDEX uniq_workspace_slug ON workspace (slug)');
