@@ -25,18 +25,21 @@ final class ConsumeMqttCommand extends Command
             return Command::FAILURE;
         }
 
-        // A process argument array avoids shell interpolation.
-        $process = proc_open(
+        $attempt = 0;
+        while (true) {
+            // A process argument array avoids shell interpolation.
+            $process = proc_open(
             ['mosquitto_sub', '-h', '127.0.0.1', '-p', '1883', '-q', '0', '-t', 'scada/+/+/+', '-F', '%t %p'],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
         );
-        if (!is_resource($process)) {
-            $output->writeln('<error>Cannot start mosquitto_sub. Install mosquitto clients.</error>');
-            return Command::FAILURE;
-        }
+            if (!is_resource($process)) {
+                $output->writeln('<error>Cannot start mosquitto_sub. Install mosquitto clients.</error>');
+                return Command::FAILURE;
+            }
         fclose($pipes[0]);
         $output->writeln('<info>Listening for MQTT telemetry on localhost:1883. Press Ctrl+C to stop.</info>');
+        $startedAt = time();
 
         while (($line = fgets($pipes[1], 8192)) !== false) {
             $parts = explode(' ', trim($line), 2);
@@ -56,10 +59,14 @@ final class ConsumeMqttCommand extends Command
         $error = stream_get_contents($pipes[2]);
         fclose($pipes[2]);
         $code = proc_close($process);
-        if ($code !== 0) {
-            $output->writeln('<error>Subscriber stopped: '.trim($error).'</error>');
-            return Command::FAILURE;
+        if ($code === 0) {
+            return Command::SUCCESS;
         }
-        return Command::SUCCESS;
+        $attempt = time() - $startedAt > 60 ? 0 : min($attempt + 1, 6);
+        $delay = min(30, 2 ** $attempt);
+        $output->writeln('<comment>Subscriber disconnected: '.trim($error).'; reconnecting in '.$delay.'s.</comment>');
+        sleep($delay);
+        }
+
     }
 }
