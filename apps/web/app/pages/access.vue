@@ -21,16 +21,9 @@ const addMemberForm = ref<{ reset: () => void } | null>(null)
 async function addMember(email: string, role: WorkspaceRole) {
   if (await updateMember('POST', { email, role })) addMemberForm.value?.reset()
 }
-const editing = ref('')
-const editRole = ref<WorkspaceRole>('viewer')
 async function mutate(method: 'POST' | 'PATCH' | 'DELETE', userId?: string, role?: WorkspaceRole) {
   const success = await updateMember(method, { userId, role })
-  if (success) editing.value = ''
-}
-function startEdit(member: Member) {
-  editing.value = member.userId
-  editRole.value = member.role
-  actionError.value = ''
+  if (success) actionSuccess.value = fr.value ? 'Accès mis à jour.' : 'Access updated.'
 }
 async function removeMember(member: Member) {
   if (!window.confirm(fr.value ? `Retirer l’accès de ${member.email} ?` : `Remove access for ${member.email}?`)) return
@@ -132,29 +125,7 @@ async function removeMember(member: Member) {
             <p class="font-semibold text-slate-800">{{ fr ? 'Aucun membre trouvé' : 'No members found' }}</p>
             <p class="mt-2 text-sm text-slate-500">{{ fr ? 'Essayez de modifier les filtres.' : 'Try changing your filters.' }}</p>
           </div>
-          <div v-else class="overflow-x-auto">
-            <table class="w-full min-w-[32rem] text-left text-sm">
-              <thead class="bg-slate-50 text-slate-600"><tr><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Utilisateur' : 'User' }}</th><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Autorisation' : 'Permission' }}</th><th scope="col" class="px-5 py-3 font-semibold">{{ fr ? 'Actions' : 'Actions' }}</th></tr></thead>
-              <tbody class="divide-y divide-slate-100">
-                <tr v-for="member in visible" :key="member.userId" class="hover:bg-slate-50">
-                  <td class="px-5 py-4 font-medium text-slate-900">{{ member.email }}</td>
-                  <td class="px-5 py-4"><AccessRoleBadge :role="member.role" /></td>
-                  <td class="px-5 py-4">
-                    <div v-if="editing === member.userId" class="flex flex-wrap items-center gap-2">
-                      <label :for="'edit-role-' + member.userId" class="sr-only">{{ fr ? 'Nouveau rôle' : 'New role' }}</label>
-                      <AccessRoleSelect :id="'edit-role-' + member.userId" v-model="editRole" :disabled="actionBusy" />
-                      <button type="button" :disabled="actionBusy" class="rounded-lg bg-sky-800 px-3 py-2 text-white disabled:opacity-50" @click="mutate('PATCH', member.userId, editRole)">{{ fr ? 'Enregistrer' : 'Save' }}</button>
-                      <button type="button" class="rounded-lg border border-slate-300 px-3 py-2" @click="editing = ''">{{ fr ? 'Annuler' : 'Cancel' }}</button>
-                    </div>
-                    <div v-else class="flex flex-wrap gap-2">
-                      <button type="button" :disabled="actionBusy" class="rounded-lg border border-slate-300 px-3 py-2 hover:bg-slate-50 disabled:opacity-50" @click="startEdit(member)">{{ fr ? 'Modifier' : 'Edit' }}</button>
-                      <button type="button" :disabled="actionBusy || (member.role === 'owner' && owners <= 1)" class="rounded-lg border border-red-200 px-3 py-2 text-red-800 hover:bg-red-50 disabled:opacity-40" @click="removeMember(member)">{{ fr ? 'Retirer' : 'Remove' }}</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <AccessMembersTable v-else :members="visible" :busy="actionBusy" :owner-count="owners" @change-role="(id, role) => mutate('PATCH', id, role)" @remove="removeMember" />
           <div v-if="!loading && !error && filtered.length" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-600">
             <p role="status">{{ filtered.length }} {{ fr ? 'résultat(s)' : 'result(s)' }}</p>
             <div v-if="totalPages > 1" class="flex items-center gap-3">
