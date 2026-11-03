@@ -35,7 +35,7 @@ final class AccountOwnershipTest extends TestCase
         self::assertSame($user, $dashboard->owner);
         self::assertSame([], $dashboard->widgets);
 
-        $source = new DataSource($workspace, 'PLC', 'plc', 'mqtt');
+        $source = new DataSource($workspace, 'plc', 'PLC', 'mqtt');
         $tag = new Tag($source, 'temperature', 'Temperature', 'float');
         $preference = new UserTag($user, $tag);
         self::assertSame($tag, $preference->tag);
