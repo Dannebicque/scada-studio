@@ -13,6 +13,15 @@ const { data: catalog } = await useFetch<{ tags: { id: string; name: string }[] 
 const availableTags = computed(() => (catalog.value?.tags ?? []).filter(tag => !draftWidgets.value.some(widget => widget.tagId === tag.id)))
 function beginPreview() { draftWidgets.value = current.value?.widgets.map(widget => ({ ...widget })) ?? []; editing.value = true }
 function cancelPreview() { editing.value = false; draftWidgets.value = []; chosenTagId.value = '' }
+function moveWidget(index: number, offset: number) {
+  const target = index + offset
+  if (target < 0 || target >= draftWidgets.value.length) return
+  const updated = [...draftWidgets.value]
+  const [widget] = updated.splice(index, 1)
+  if (!widget) return
+  updated.splice(target, 0, widget)
+  draftWidgets.value = updated
+}
 function addWidget() {
   const tag = availableTags.value.find(item => item.id === chosenTagId.value)
   if (!tag || draftWidgets.value.length >= 40) return
@@ -72,10 +81,14 @@ function formatValue(value: number | string | boolean | undefined): string {
         </div>
       </div>
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article v-for="widget in visibleWidgets.filter(w => w.type === 'value')" :key="widget.tagId" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <article v-for="(widget, index) in visibleWidgets.filter(w => w.type === 'value')" :key="widget.tagId" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div class="flex items-start justify-between gap-2">
             <h3 class="text-sm font-medium text-slate-600">{{ widget.title }}</h3>
-            <button v-if="editing" type="button" class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" @click="draftWidgets = draftWidgets.filter(item => item.tagId !== widget.tagId)">{{ t('removeWidget') }}</button>
+            <div v-if="editing" class="flex flex-wrap gap-1">
+              <button type="button" :disabled="index === 0" :aria-label="t('moveEarlier') + ': ' + widget.title" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-30" @click="moveWidget(index, -1)">←</button>
+              <button type="button" :disabled="index === draftWidgets.length - 1" :aria-label="t('moveLater') + ': ' + widget.title" class="rounded border border-slate-200 px-2 py-1 text-xs disabled:opacity-30" @click="moveWidget(index, 1)">→</button>
+              <button type="button" class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" @click="draftWidgets = draftWidgets.filter(item => item.tagId !== widget.tagId)">{{ t('removeWidget') }}</button>
+            </div>
           </div>
           <p class="mt-4 text-3xl font-bold tabular-nums">{{ formatValue(values.get(widget.tagId)?.value) }}</p>
           <p class="mt-3 flex items-center gap-2 text-sm" :class="quality(values.get(widget.tagId)) === 'good' ? 'text-emerald-700' : 'text-amber-700'">
