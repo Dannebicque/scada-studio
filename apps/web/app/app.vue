@@ -9,6 +9,7 @@ const links = [
   { to: '/connectors', key: 'connectors' },
   { to: '/synoptic', key: 'synoptic' },
   { to: '/docs', key: 'documentation' },
+  { to: '/account', key: 'account' },
 ] as const
 </script>
 
@@ -27,7 +28,7 @@ const links = [
         </div>
       </div>
       <nav :aria-label="t('navigation')" class="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-5 pb-3">
-        <NuxtLink v-for="link in links" :key="link.to" :to="link.to" class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-sky-600" active-class="bg-sky-100 !text-sky-900" :exact-active-class="link.to === '/' ? 'bg-sky-100 !text-sky-900' : undefined">{{ t(link.key) }}</NuxtLink>
+        <NuxtLink v-for="link in links" :key="link.to" :to="link.to" class="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-2 focus-visible:outline-sky-600" active-class="bg-sky-100 !text-sky-900" :exact-active-class="link.to === '/' ? 'bg-sky-100 !text-sky-900' : undefined">{{ link.key === 'account' ? (locale === 'fr' ? 'Compte' : 'Account') : t(link.key) }}</NuxtLink>
       </nav>
     </header>
     <div id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-5" :class="isDocumentation ? 'pt-4 pb-8' : 'py-8'">
