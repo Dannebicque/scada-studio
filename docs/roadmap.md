@@ -50,3 +50,15 @@ Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, t
 - [ ] Étendre aux autres connecteurs et services, avec états normalisés `online/degraded/offline/unknown`, horodatage et détail consultable.
 - [ ] Ajouter les alertes et incidents persistants ultérieurement ; éviter de confondre alerte métier et état d'infrastructure.
 - [ ] Vérifier clavier, lecteurs d'écran, fréquence des annonces et contrastes ; pas d'annonces répétées à chaque polling.
+
+## Documentation utilisateur FR/EN (transverse, démarrage L3)
+
+- [x] Créer un corpus Markdown bilingue versionné dans `apps/web/content/fr` et `apps/web/content/en`, avec les mêmes slugs.
+- [x] Documenter le démarrage, le dashboard, les connecteurs MQTT et les limites de sécurité, sans anticiper les fonctionnalités non livrées.
+- [ ] Brancher `@nuxt/content` et générer le lockfile npm dans un environnement disposant du registre npm ; ne pas ajouter de dépendance sans lockfile reproductible.
+- [ ] Exposer `/docs/fr/*` et `/docs/en/*` avec navigation, recherche, sommaire et liens contextuels depuis l'application.
+- [ ] Synchroniser la langue de la documentation avec le choix FR/EN de l'interface.
+- [ ] Ajouter en CI un contrôle de parité des slugs, des liens et des métadonnées des pages ; documenter chaque nouvelle fonctionnalité dans la même PR.
+- [ ] Revoir les anciens documents racine `docs/*.md` et retirer les instructions obsolètes, ou les marquer comme archives techniques.
+
+**Règle de contribution :** une évolution fonctionnelle ne peut être déclarée terminée sans sa documentation utilisateur FR/EN et la mise à jour éventuelle des références techniques.
