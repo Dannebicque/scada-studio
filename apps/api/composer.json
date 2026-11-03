@@ -1,4 +1,6 @@
 {
+    "name": "dannebicque/scada-studio-api",
+    "description": "Symfony API for SCADA Studio telemetry and dashboards",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
