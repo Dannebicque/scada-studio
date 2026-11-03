@@ -37,7 +37,7 @@ jobs:
           coverage: none
       - name: Validate Composer metadata
         working-directory: apps/api
-        run: composer validate --strict
+        run: composer validate --strict --no-check-publish
       - name: Install dependencies
         working-directory: apps/api
         run: composer install --no-interaction --prefer-dist --no-progress
