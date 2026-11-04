@@ -35,7 +35,8 @@ logs:
 migrate:
 	cd apps/api && php bin/console doctrine:migrations:migrate --no-interaction
 
-setup: install up migrate
+setup: env install up
+	@if [ ! -f apps/api/.env.local ]; then printf '%s\n' 'DATABASE_URL="postgresql://scada:replace-with-a-local-development-password@127.0.0.1:5432/scada?serverVersion=17&charset=utf8"' > apps/api/.env.local; echo 'Edit apps/api/.env.local to match POSTGRES_PASSWORD in .env, then run make migrate.'; else $(MAKE) migrate; fi
 	@echo "Start two terminals: make api and make web"
 
 api:
