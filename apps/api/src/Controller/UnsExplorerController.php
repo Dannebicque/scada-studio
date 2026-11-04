@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\AppUser;
+use App\Entity\UnsAsset;
+use App\Entity\UnsAssetTag;
 use App\Entity\DataSource;
 use App\Entity\Tag;
 use App\Entity\Workspace;
@@ -32,6 +34,21 @@ final class UnsExplorerController extends AbstractController
                 ];
             }
         }
-        return new JsonResponse(['workspaceId' => $workspace->id, 'projection' => 'source-tag-v1', 'tags' => $items], headers: ['Cache-Control' => 'private, no-store']);
+        $assets = [];
+        foreach ($em->getRepository(UnsAsset::class)->findBy(['workspace' => $workspace], ['name' => 'ASC']) as $asset) {
+            $assets[] = [
+                'id' => $asset->id, 'parentId' => $asset->parent?->id,
+                'key' => $asset->key, 'name' => $asset->name, 'type' => $asset->type,
+            ];
+        }
+        $bindings = [];
+        foreach ($em->getRepository(UnsAssetTag::class)->findAll() as $binding) {
+            if ($binding->asset->workspace->id !== $workspace->id) continue;
+            $bindings[] = ['assetId' => $binding->asset->id, 'tagId' => $binding->tag->id];
+        }
+        return new JsonResponse([
+            'workspaceId' => $workspace->id, 'projection' => 'semantic-assets-v1',
+            'assets' => $assets, 'bindings' => $bindings, 'tags' => $items,
+        ], headers: ['Cache-Control' => 'private, no-store']);
     }
 }
