@@ -111,7 +111,8 @@ Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, t
 - [x] API de lecture `GET /api/workspaces/{id}/uns` avec contrôle de visibilité du workspace.
 - [x] Projection provisoire `workspace/source/tag` conservant les `tagId` stables.
 - [x] Proxy Nuxt avec session et page bilingue `/uns` : sélection d'espace, recherche locale et liste des tags.
-- [ ] Hiérarchie d'actifs indépendante des sources, mappings explicites MQTT/OPC UA et recherche serveur paginée.
+- [x] Première entité hiérarchique d'actifs et table de correspondance avec les tags canoniques ; API et exploration en lecture seule.
+- [ ] CRUD des actifs, mappings explicites MQTT/OPC UA et recherche serveur paginée.
 - [ ] Métadonnées sémantiques, requêtes structurées et outils IA en lecture seule.
 - [ ] Tests authentifiés inter-espaces, performances et vérification de la conformité des mappings.
 
