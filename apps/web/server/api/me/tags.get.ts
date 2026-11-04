@@ -1,3 +1,3 @@
 import { personalCollection } from '../../utils/personalCollection'
-import type { PersonalTag } from '~/types/personal'
-export default personalCollection<{ tags: PersonalTag[] }>('/api/me/tags')
+type TagPreference = { tagId: string; displayName: string | null; favorite: boolean }
+export default personalCollection<{ tags: TagPreference[] }>('/api/me/tags')
