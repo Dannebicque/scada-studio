@@ -10,9 +10,9 @@ export default defineEventHandler(async (event): Promise<{ workspaceId: string; 
   const cookie = getRequestHeader(event, 'cookie')
   const base = useRuntimeConfig().apiBaseUrl.replace(/\/$/, '')
   try {
-    return await $fetch<{ workspaceId: string; projection: string; tags: UnsTag[] }>(base + '/api/workspaces/' + id + '/uns', {
+    return await $fetch<{ workspaceId: string; projection: string; assets: UnsAsset[]; bindings: UnsBinding[]; tags: UnsTag[] }>(base + '/api/workspaces/' + id + '/uns', {
       headers: cookie ? { cookie } : {}, retry: 0, timeout: 3000,
-    }) as { workspaceId: string; projection: string; tags: UnsTag[] }
+    }) as { workspaceId: string; projection: string; assets: UnsAsset[]; bindings: UnsBinding[]; tags: UnsTag[] }
   } catch (error: unknown) {
     const status = (error as { response?: { status?: number } })?.response?.status
     throw createError({ statusCode: status === 401 || status === 403 || status === 404 ? status : 503 })
