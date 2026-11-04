@@ -9,7 +9,7 @@ export function personalCollection<T>(path: '/api/me/dashboards' | '/api/me/tags
         headers: cookie ? { cookie } : {},
         retry: 0,
         timeout: 3000,
-      })
+      }) as T
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status
       throw createError({ statusCode: status === 401 || status === 403 ? status : 503, statusMessage: 'Personal data unavailable' })
