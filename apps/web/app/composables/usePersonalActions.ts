@@ -6,7 +6,7 @@ export function usePersonalActions() {
   const { refresh: refreshDashboards } = usePersonalDashboards()
   const { refresh: refreshTags } = usePersonalTags()
 
-  async function execute(path: string, method: 'POST' | 'PUT' | 'DELETE', body?: object) {
+  async function execute(path: string, method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', body?: object) {
     if (busy.value) return false
     busy.value = true
     error.value = ''
@@ -26,11 +26,14 @@ export function usePersonalActions() {
   function createDashboard(input: Pick<PersonalDashboard, 'workspaceId' | 'name' | 'slug' | 'widgets'>) {
     return execute('/api/me/dashboards', 'POST', input)
   }
+  function updateDashboard(id: string, widgets: PersonalDashboard['widgets']) {
+    return execute('/api/me/dashboards/' + encodeURIComponent(id), 'PATCH', { widgets })
+  }
   function deleteDashboard(id: string) {
     return execute('/api/me/dashboards/' + encodeURIComponent(id), 'DELETE')
   }
   function saveTag(tag: PersonalTag) {
     return execute('/api/me/tags/' + encodeURIComponent(tag.tagId), 'PUT', { favorite: tag.favorite, displayName: tag.displayName })
   }
-  return { busy, error, createDashboard, deleteDashboard, saveTag }
+  return { busy, error, createDashboard, deleteDashboard, updateDashboard, saveTag }
 }
