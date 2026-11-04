@@ -105,3 +105,14 @@ Issues titrées `[Lx][Module] Action`, avec contexte, critères d'acceptation, t
 - [x] Formatage centralisé des horodatages avec langue et fuseau horaire du navigateur ; sérialisation UTC explicite côté API.
 - [ ] Remplacer le rendu Markdown minimal par `@nuxt/content` avec lockfile, sommaire, recherche et rendu Markdown complet.
 - [ ] Tester en CI les routes documentaires, les formats de dates et le changement de fuseau horaire.
+
+### Avancement UNS (première projection)
+
+- [x] API de lecture `GET /api/workspaces/{id}/uns` avec contrôle de visibilité du workspace.
+- [x] Projection provisoire `workspace/source/tag` conservant les `tagId` stables.
+- [x] Proxy Nuxt avec session et page bilingue `/uns` : sélection d'espace, recherche locale et liste des tags.
+- [ ] Hiérarchie d'actifs indépendante des sources, mappings explicites MQTT/OPC UA et recherche serveur paginée.
+- [ ] Métadonnées sémantiques, requêtes structurées et outils IA en lecture seule.
+- [ ] Tests authentifiés inter-espaces, performances et vérification de la conformité des mappings.
+
+La projection actuelle est une **étape exploratoire**, pas encore un UNS sémantique complet.
