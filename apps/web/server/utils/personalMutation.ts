@@ -1,7 +1,7 @@
 import { createError, getRequestHeader, readBody } from 'h3'
 import type { H3Event } from 'h3'
 
-export async function personalMutation(event: H3Event, method: 'POST' | 'PUT' | 'DELETE', path: string): Promise<unknown> {
+export async function personalMutation(event: H3Event, method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string): Promise<unknown> {
   const token = getRequestHeader(event, 'x-csrf-token')
   if (!token) throw createError({ statusCode: 403 })
   const cookie = getRequestHeader(event, 'cookie')
