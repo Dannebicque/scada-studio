@@ -93,3 +93,11 @@ Les opérations `PATCH` et `DELETE` sur les membres exécutent désormais la vé
 ## EN — concurrency and last owner
 
 Member `PATCH` and `DELETE` operations now check last-owner protection inside a Doctrine transaction with a pessimistic lock on the `workspace` row. Concurrent changes to the same workspace are serialized before counting owners. HTTP `409` protects the last `owner` membership. HTTP tests also cover anonymous `POST`, `PATCH` and `DELETE` denial. A real PostgreSQL concurrency scenario and authenticated integration tests remain to be executed.
+
+## FR — tests d'intégration et espace personnel
+
+`WorkspaceMembershipIntegrationTest` prépare deux espaces et trois comptes afin de vérifier les autorisations `owner/editor/viewer`, les refus inter-espaces, la protection du dernier propriétaire et l'exigence CSRF. La suppression des données de test s'effectue par DBAL après les requêtes Symfony, car le gestionnaire Doctrine peut être réinitialisé entre requêtes. Côté Nuxt, les lectures `/api/me/dashboards` et `/api/me/tags` transitent par `server/utils/personalCollection.ts` ; `usePersonalDashboards()` et `usePersonalTags()` exposent les collections typées. La page `/personal` affiche ces données en lecture seule.
+
+## EN — integration tests and personal workspace
+
+`WorkspaceMembershipIntegrationTest` sets up two workspaces and three accounts to verify `owner/editor/viewer` permissions, cross-workspace denial, last-owner protection and CSRF enforcement. Fixtures are cleaned through DBAL after Symfony requests because Doctrine's entity manager can reset between requests. Nuxt reads `/api/me/dashboards` and `/api/me/tags` through `server/utils/personalCollection.ts`; `usePersonalDashboards()` and `usePersonalTags()` expose typed collections. The `/personal` page displays them in read-only mode.
