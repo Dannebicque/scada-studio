@@ -47,6 +47,24 @@ final class PersonalDashboardWriteController extends AbstractController
         return new JsonResponse(['id' => $dashboard->id], 201, ['Cache-Control' => 'private, no-store']);
     }
 
+    #[Route('/api/me/dashboards/{id}', methods: ['PATCH'])]
+    public function update(string $id, Request $request): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof AppUser) return new JsonResponse(['error' => 'Authentication required'], 401);
+        if (!$this->validCsrf($request)) return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
+        $dashboard = $this->em->getRepository(UserDashboard::class)->findOneBy(['id' => $id, 'owner' => $user]);
+        if (!$dashboard || !$this->access->canView($user, $dashboard->workspace)) return new JsonResponse(['error' => 'Not found'], 404);
+        $data = json_decode($request->getContent(), true);
+        if (!is_array($data) || !array_key_exists('widgets', $data) || !is_array($data['widgets'])
+            || !$this->validWidgets($data['widgets'], $dashboard->workspace)) {
+            return new JsonResponse(['error' => 'Invalid widgets'], 422);
+        }
+        $dashboard->widgets = $data['widgets'];
+        $this->em->flush();
+        return new JsonResponse(['success' => true], headers: ['Cache-Control' => 'private, no-store']);
+    }
+
     #[Route('/api/me/dashboards/{id}', methods: ['DELETE'])]
     public function remove(string $id, Request $request): JsonResponse
     {
