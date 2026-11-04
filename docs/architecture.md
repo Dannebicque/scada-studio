@@ -23,7 +23,8 @@ Web UI (éditeur dashboard / éditeur SVG / runtime)
 - **Runtime** : abonnements, qualité/horodatage, bindings, transformations explicites.
 - **Plugins** : manifestes, capacités, schémas de configuration et registre central.
 - **Stockage** : configurations versionnées et séries temporelles, technologie à choisir par ADR.
-- **IA** : production de propositions JSON validées côté serveur, confirmation humaine avant publication.
+- **UNS (cible L5, fondations L2/L3)** : projection sémantique navigable des actifs et tags, découplée des topics MQTT et NodeIds OPC UA ; API de recherche avec contrôle d'accès, provenance et identifiants stables.
+- **IA** : requêtes structurées sur la projection UNS autorisée, puis production de propositions JSON validées côté serveur, confirmation humaine avant publication.
 
 ## Modèle de télémétrie
 ```json
@@ -48,3 +49,21 @@ Qualité : `good | uncertain | bad | stale`. Les horodatages sont en UTC, la per
 
 ## Décisions ouvertes
 Stack frontend/backend, bus temps réel (WebSocket/SSE), stockage des séries, modèle de déploiement des plugins, choix du moteur de synoptique et des bibliothèques de graphiques. Chaque choix fera l'objet d'un ADR et d'un prototype ciblé.
+
+## Chaîne cible UNS → IA → dashboard
+
+```text
+MQTT / OPC UA → mapping explicite → tags canoniques
+                                        |
+                             projection UNS / actifs
+                                        |
+                        recherche filtrée par permissions
+                                        |
+                   assistant IA (intention → requête structurée)
+                                        |
+                 proposition JSON de widgets (tagId stables)
+                                        |
+                    validation API → aperçu → confirmation
+```
+
+L'UNS est un modèle logique de navigation et de relations, pas une autorisation implicite de publier des messages MQTT. Les chemins UNS sont modifiables ; les configurations persistées doivent référencer les identifiants stables des tags. L'IA ne voit que les métadonnées autorisées et ne peut pas inventer de références valides. La publication vers un broker UNS externe, le choix arbre/graphe et les mécanismes de synchronisation nécessitent une ADR et un prototype.
