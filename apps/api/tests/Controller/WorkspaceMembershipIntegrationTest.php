@@ -61,11 +61,10 @@ final class WorkspaceMembershipIntegrationTest extends WebTestCase
             $client->request('DELETE', '/api/workspaces/'.$b->id.'/members/'.$viewer->id, server: ['HTTP_X_CSRF_TOKEN' => $token]);
             self::assertResponseStatusCodeSame(403);
         } finally {
-            foreach ($em->getRepository(WorkspaceMember::class)->findBy(['workspace' => $a]) as $member) $em->remove($member);
-            foreach ($em->getRepository(WorkspaceMember::class)->findBy(['workspace' => $b]) as $member) $em->remove($member);
-            $em->flush();
-            foreach ([$a, $b, $owner, $viewer, $editor] as $entity) $em->remove($entity);
-            $em->flush();
+            $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+            $db->executeStatement('DELETE FROM workspace_member WHERE workspace_id IN (?, ?)', [$a->id, $b->id]);
+            $db->executeStatement('DELETE FROM workspace WHERE id IN (?, ?)', [$a->id, $b->id]);
+            $db->executeStatement('DELETE FROM app_user WHERE id IN (?, ?, ?)', [$owner->id, $viewer->id, $editor->id]);
         }
     }
 }
