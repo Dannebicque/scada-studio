@@ -1,3 +1,3 @@
 import { personalCollection } from '../../utils/personalCollection'
-import type { PersonalDashboard } from '~/types/personal'
-export default personalCollection<{ dashboards: PersonalDashboard[] }>('/api/me/dashboards')
+type Dashboard = { id: string; workspaceId: string; name: string; slug: string; widgets: unknown[] }
+export default personalCollection<{ dashboards: Dashboard[] }>('/api/me/dashboards')
