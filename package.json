@@ -1,0 +1,13 @@
+{
+  "name": "scada-studio",
+  "private": true,
+  "packageManager": "npm@10.9.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @scada-studio/web",
+    "build:web": "npm run build -w @scada-studio/web",
+    "typecheck:web": "npm run typecheck -w @scada-studio/web"
+  }
+}

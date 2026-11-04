@@ -1,0 +1,60 @@
+name: Backend
+on:
+  push:
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/backend.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: scada_test
+          POSTGRES_PASSWORD: scada_test
+          POSTGRES_DB: scada
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd=pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APP_ENV: test
+      DEFAULT_URI: 'http://localhost'
+      DATABASE_URL: 'postgresql://scada_test:scada_test@127.0.0.1:5432/scada?serverVersion=17&charset=utf8'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, mbstring, pdo_pgsql, pcntl
+          coverage: none
+      - name: Validate Composer metadata
+        working-directory: apps/api
+        run: composer validate --strict --no-check-publish
+      - name: Create Symfony environment file
+        working-directory: apps/api
+        run: printf 'APP_ENV=test\n' > .env
+      - name: Install dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Create isolated test database
+        working-directory: apps/api
+        run: php bin/console doctrine:database:create --env=test --if-not-exists
+      - name: Prepare isolated test schema
+        working-directory: apps/api
+        run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
+      - name: Run Symfony tests
+        working-directory: apps/api
+        run: php bin/phpunit
+      - name: Install MQTT smoke test client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mosquitto-clients
+      - name: MQTT broker restart integration test
+        run: bash infra/tests/mqtt-reconnect-smoke.sh
