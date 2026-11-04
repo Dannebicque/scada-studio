@@ -42,8 +42,9 @@ final class UnsExplorerController extends AbstractController
             ];
         }
         $bindings = [];
-        foreach ($em->getRepository(UnsAssetTag::class)->findAll() as $binding) {
-            if ($binding->asset->workspace->id !== $workspace->id) continue;
+        foreach ($em->getRepository(UnsAssetTag::class)->createQueryBuilder('binding')
+            ->join('binding.asset', 'asset')->where('asset.workspace = :workspace')
+            ->setParameter('workspace', $workspace)->getQuery()->getResult() as $binding) {
             $bindings[] = ['assetId' => $binding->asset->id, 'tagId' => $binding->tag->id];
         }
         return new JsonResponse([
