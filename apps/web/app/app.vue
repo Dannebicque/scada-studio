@@ -7,6 +7,7 @@ const links = [
   { to: '/', key: 'home' },
   { to: '/catalog', key: 'catalog' },
   { to: '/uns', key: 'uns' },
+  { to: '/uns-discovery', key: 'unsDiscovery' },
   { to: '/uns-import', key: 'unsImport' },
   { to: '/dashboard', key: 'dashboard' },
   { to: '/connectors', key: 'connectors' },
@@ -19,6 +20,7 @@ type LinkKey = (typeof links)[number]['key']
 function label(key: LinkKey): string {
   switch (key) {
     case 'uns': return 'UNS'
+    case 'unsDiscovery': return fr.value ? 'Découverte UNS' : 'UNS discovery'
     case 'unsImport': return fr.value ? 'Import UNS' : 'UNS import'
     case 'account': return fr.value ? 'Compte' : 'Account'
     case 'personal': return fr.value ? 'Mon espace' : 'My workspace'

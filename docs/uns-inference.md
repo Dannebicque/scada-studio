@@ -15,6 +15,8 @@ MQTT/UNS ──► tools/uns-infer ──► page.json (page.schema.json) ──
 
 ## Découverte depuis l'API (sans console)
 
+L'interface `/uns-discovery` (propriétaires uniquement) enchaîne ces appels : exploration d'un préfixe, choix des équipements, création du catalogue (activation de l'ingestion en option), puis création du tableau de bord personnel.
+
 Pour un serveur sans accès console, l'inférence et l'activation sont aussi exposées par l'API, réservées aux **propriétaires** du workspace et protégées par jeton CSRF (même mécanisme que la gestion des membres) :
 
 | Route | Rôle |
