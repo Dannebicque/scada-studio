@@ -34,6 +34,16 @@ const errorText: Record<DiscoveryError, { fr: string; en: string }> = {
   unavailable: { fr: 'Service indisponible. Réessayez dans un instant.', en: 'Service unavailable. Please try again shortly.' },
 }
 
+// Progression de l'écoute : le serveur ne renvoie qu'à la fin, on suit donc le temps écoulé côté client.
+const elapsed = ref(0)
+let ticker: ReturnType<typeof setInterval> | undefined
+watch(listening, (on) => {
+  if (ticker) clearInterval(ticker)
+  elapsed.value = 0
+  if (on) ticker = setInterval(() => { elapsed.value = Math.min(elapsed.value + 1, seconds.value) }, 1000)
+})
+onUnmounted(() => { if (ticker) clearInterval(ticker) })
+
 async function explore() {
   const ok = await discover(prefix.value.trim().replace(/^\/+|\/+$/g, ''), seconds.value)
   if (ok && result.value) selected.value = new Set(result.value.model.assets.map(asset => asset.topic))
@@ -128,7 +138,8 @@ async function makeDashboard() {
 
         <div v-if="listening" role="status" class="mt-4">
           <p>{{ fr ? `Écoute de ${prefix} pendant ${seconds} s…` : `Listening to ${prefix} for ${seconds} s…` }}</p>
-          <progress class="mt-2 w-full max-w-md" :aria-label="fr ? 'Écoute en cours' : 'Listening in progress'" />
+          <progress class="mt-2 w-full max-w-md" :max="seconds" :value="elapsed" :aria-label="fr ? 'Progression de l’écoute' : 'Listening progress'" />
+          <p class="mt-1 text-sm tabular-nums text-slate-600" aria-hidden="true">{{ elapsed }} / {{ seconds }} s<span v-if="elapsed >= seconds"> — {{ fr ? 'analyse des trames…' : 'analysing frames…' }}</span></p>
         </div>
         <p v-if="error && !result" role="alert" class="mt-3 rounded border border-red-300 bg-red-50 p-3 text-red-900">{{ errorText[error][fr ? 'fr' : 'en'] }}</p>
       </section>
