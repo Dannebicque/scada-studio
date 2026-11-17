@@ -33,7 +33,7 @@ async function logout() {
 </script>
 
 <template>
-  <main class="space-y-6">
+  <div class="space-y-6">
     <header>
       <h1 class="text-3xl font-bold">{{ fr ? 'Mon compte' : 'My account' }}</h1>
       <p class="mt-2 text-slate-600">{{ fr ? 'Identité et accès aux espaces de supervision.' : 'Identity and monitoring workspace access.' }}</p>
@@ -73,5 +73,5 @@ async function logout() {
       <button type="button" :disabled="submitting" class="rounded-lg border border-slate-300 px-4 py-2" @click="logout">{{ fr ? 'Se déconnecter' : 'Sign out' }}</button>
     </template>
     <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm" @click="refresh()">{{ fr ? 'Actualiser' : 'Refresh' }}</button>
-  </main>
+  </div>
 </template>

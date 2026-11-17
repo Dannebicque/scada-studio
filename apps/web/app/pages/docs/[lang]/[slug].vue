@@ -33,7 +33,7 @@ const links = computed(() => [
   { slug: 'dashboard', title: lang.value === 'fr' ? 'Tableaux de bord' : 'Dashboards' },
   { slug: 'connectors', title: lang.value === 'fr' ? 'Connecteurs' : 'Connectors' },
 ])
-type Block = { kind: 'h1' | 'h2' | 'p' | 'code' | 'li'; value: string }
+type Block = { kind: 'h1' | 'h2' | 'p' | 'code'; value: string } | { kind: 'ul'; items: string[] }
 const blocks = computed<Block[]>(() => {
   const source = raw.value.replace(/^---\n[\s\S]*?\n---\n/, '').trim()
   const result: Block[] = []
@@ -50,7 +50,9 @@ const blocks = computed<Block[]>(() => {
     } else if (line.startsWith('## ')) {
       result.push({ kind: 'h2', value: line.slice(3) })
     } else if (line.startsWith('- ')) {
-      result.push({ kind: 'li', value: line.slice(2) })
+      const last = result[result.length - 1]
+      if (last?.kind === 'ul') last.items.push(line.slice(2))
+      else result.push({ kind: 'ul', items: [line.slice(2)] })
     } else if (line.trim()) {
       result.push({ kind: 'p', value: line })
     }
@@ -73,7 +75,7 @@ watch(locale, value => {
 </script>
 
 <template>
-  <div class="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+  <div :lang="lang" class="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
     <nav :aria-label="lang === 'fr' ? 'Documentation' : 'Documentation'" class="rounded-xl border border-slate-200 bg-white p-4 lg:self-start">
       <h2 class="mb-3 font-semibold">{{ lang === 'fr' ? 'Documentation' : 'Documentation' }}</h2>
       <ul class="space-y-1">
@@ -86,8 +88,16 @@ watch(locale, value => {
       <template v-for="(block, index) in blocks" :key="index">
         <h1 v-if="block.kind === 'h1'" class="mb-6 text-3xl font-bold">{{ block.value }}</h1>
         <h2 v-else-if="block.kind === 'h2'" class="mb-4 mt-8 text-xl font-semibold">{{ block.value }}</h2>
-        <pre v-else-if="block.kind === 'code'" class="my-4 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-50"><code>{{ block.value }}</code></pre>
-        <p v-else :class="block.kind === 'li' ? 'mb-2 pl-4 before:mr-2 before:content-[\'•\']' : 'mb-4 leading-7'">
+        <pre v-else-if="block.kind === 'code'" tabindex="0" :aria-label="lang === 'fr' ? 'Exemple de code' : 'Code sample'" class="my-4 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-50"><code>{{ block.value }}</code></pre>
+        <ul v-else-if="block.kind === 'ul'" class="mb-4 list-disc space-y-2 pl-6 leading-7">
+          <li v-for="(item, itemIndex) in block.items" :key="itemIndex">
+            <template v-for="(part, partIndex) in linkParts(item)" :key="partIndex">
+              <NuxtLink v-if="part.href.startsWith('/docs/')" :to="part.href" class="text-sky-700 underline">{{ part.label }}</NuxtLink>
+              <span v-else>{{ part.label }}</span>
+            </template>
+          </li>
+        </ul>
+        <p v-else class="mb-4 leading-7">
           <template v-for="(part, partIndex) in linkParts(block.value)" :key="partIndex">
             <NuxtLink v-if="part.href.startsWith('/docs/')" :to="part.href" class="text-sky-700 underline">{{ part.label }}</NuxtLink>
             <span v-else>{{ part.label }}</span>

@@ -25,7 +25,7 @@ const filtered = computed(() => {
 })
 </script>
 <template>
-  <main class="mx-auto max-w-6xl space-y-6">
+  <div class="space-y-6">
     <header>
       <h1 class="text-3xl font-bold">Unified Namespace</h1>
       <p class="mt-2 text-slate-600">{{ locale === 'fr' ? 'Exploration en lecture seule des sources et tags accessibles.' : 'Read-only exploration of accessible sources and tags.' }}</p>
@@ -47,10 +47,11 @@ const filtered = computed(() => {
       </section>
       <div v-if="filtered.length" class="overflow-x-auto rounded-xl border">
         <table class="w-full text-left text-sm">
+          <caption class="sr-only">{{ locale === 'fr' ? 'Tags du namespace avec leur chemin logique' : 'Namespace tags with their logical path' }}</caption>
           <thead class="bg-slate-100"><tr><th scope="col" class="p-3">{{ locale === 'fr' ? 'Chemin logique' : 'Logical path' }}</th><th scope="col" class="p-3">Tag</th><th scope="col" class="p-3">Type</th><th scope="col" class="p-3">{{ locale === 'fr' ? 'Actifs' : 'Assets' }}</th><th scope="col" class="p-3">{{ locale === 'fr' ? 'Unité' : 'Unit' }}</th></tr></thead>
           <tbody><tr v-for="tag in filtered" :key="tag.tagId" class="border-t"><td class="p-3 font-mono">{{ tag.path }}</td><td class="p-3">{{ tag.name }}</td><td class="p-3">{{ tag.valueType }}</td><td class="p-3">{{ tagAssets.get(tag.tagId)?.join(', ') ?? '—' }}</td><td class="p-3">{{ tag.unit ?? '—' }}</td></tr></tbody>
         </table>
       </div>
     </template>
-  </main>
+  </div>
 </template>

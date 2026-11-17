@@ -6,7 +6,7 @@ const isHealthy = computed(() => status.value === 'success' && data.value?.statu
 </script>
 
 <template>
-  <main>
+  <div>
     <header class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-700">{{ t('workspace') }}</p>
       <h1 class="mt-2 text-4xl font-bold tracking-tight">{{ t('overview') }}</h1>
@@ -21,5 +21,5 @@ const isHealthy = computed(() => status.value === 'success' && data.value?.statu
       </p>
       <button type="button" class="mt-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50" :disabled="status === 'pending'" @click="refresh()">{{ t('refresh') }}</button>
     </section>
-  </main>
+  </div>
 </template>

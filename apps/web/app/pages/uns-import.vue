@@ -92,7 +92,7 @@ async function save() {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl space-y-6">
+  <div class="space-y-6">
     <header>
       <h1 class="text-3xl font-bold">{{ fr ? 'Importer un dashboard depuis le UNS' : 'Import a dashboard from the UNS' }}</h1>
       <p class="mt-2 text-slate-600">{{ fr
@@ -147,9 +147,10 @@ async function save() {
                   </div>
                   <button type="button" class="shrink-0 text-sm text-red-800 underline" @click="removeElement(el.id)">{{ fr ? 'Retirer' : 'Remove' }}<span class="sr-only"> {{ el.label }}</span></button>
                 </div>
-                <p v-if="matched(el)" class="truncate text-sm" :title="matched(el)?.path">
-                  <span class="font-semibold text-emerald-800">{{ fr ? 'Associé' : 'Matched' }}</span> · <span class="font-mono text-xs">{{ matched(el)?.path }}</span> · <span aria-label="">{{ display(el) }}</span>
-                </p>
+                <template v-if="matched(el)">
+                  <p class="text-sm"><span class="font-semibold text-emerald-800">{{ fr ? 'Associé' : 'Matched' }}</span> · <span class="font-semibold tabular-nums">{{ display(el) }}</span></p>
+                  <p class="truncate font-mono text-xs text-slate-600" :title="matched(el)?.path">{{ matched(el)?.path }}</p>
+                </template>
                 <p v-else class="text-sm font-semibold text-amber-800">{{ fr ? 'Non associé' : 'Unmatched' }}<span v-if="el.topic" class="ml-1 truncate font-mono text-xs font-normal text-slate-500">{{ el.topic }}</span></p>
               </template>
             </li>
@@ -167,5 +168,5 @@ async function save() {
         </form>
       </template>
     </template>
-  </main>
+  </div>
 </template>

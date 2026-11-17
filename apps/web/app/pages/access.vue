@@ -32,7 +32,7 @@ async function removeMember(member: Member) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl space-y-7">
+  <div class="space-y-7">
     <nav :aria-label="fr ? 'Fil d’Ariane' : 'Breadcrumb'" class="text-sm text-slate-500">
       <NuxtLink to="/account" class="rounded hover:text-sky-800 hover:underline focus-visible:outline-2 focus-visible:outline-sky-600">{{ fr ? 'Mon compte' : 'My account' }}</NuxtLink>
       <span aria-hidden="true" class="mx-2">/</span>
@@ -138,5 +138,5 @@ async function removeMember(member: Member) {
         <p class="rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-900">{{ fr ? 'Seuls les propriétaires peuvent modifier les accès. Le dernier propriétaire ne peut pas être retiré.' : 'Only owners can manage access. The last owner cannot be removed.' }}</p>
       </section>
     </template>
-  </main>
+  </div>
 </template>

@@ -27,6 +27,9 @@ export const messages = {
     systemStatus: 'État du système', apiOnline: 'API accessible', apiOffline: 'API indisponible', apiChecking: 'API : vérification',
     telemetryFresh: 'Mesures récentes', telemetryStale: 'Mesures périmées', telemetryEmpty: 'Aucune mesure', telemetryUnknown: 'Télémétrie indisponible',
     lastChecked: 'Dernière vérification', systemStatusNote: 'La disponibilité du broker MQTT n’est pas mesurée directement.',
+    dashboardsShared: 'Tableaux partagés', dashboardsPersonal: 'Mes tableaux', chartPending: 'Courbe disponible avec l’historique (lot ultérieur).',
+    catalogCaption: 'Variables du catalogue avec leur dernière mesure', mqttTopicUns: 'Topics UNS (source avec préfixe)', mqttTopicUnsHint: 'Une source peut déclarer un préfixe de topic ; voir « Documentation ».',
+    readingFresh: 'Mesure récente', readingStale: 'Mesure périmée', pageNotFound: 'Page introuvable', widgetList: 'Indicateurs', stateOn: 'Actif', stateOff: 'Inactif',
   },
   en: {
     documentation: 'Documentation', home: 'Home', catalog: 'Catalog', dashboard: 'Dashboards', synoptic: 'Synoptics', connectors: 'Connectors',
@@ -56,6 +59,9 @@ export const messages = {
     systemStatus: 'System status', apiOnline: 'API reachable', apiOffline: 'API unavailable', apiChecking: 'API: checking',
     telemetryFresh: 'Recent readings', telemetryStale: 'Stale readings', telemetryEmpty: 'No readings', telemetryUnknown: 'Telemetry unavailable',
     lastChecked: 'Last checked', systemStatusNote: 'MQTT broker availability is not monitored directly.',
+    dashboardsShared: 'Shared dashboards', dashboardsPersonal: 'My dashboards', chartPending: 'Chart available once history is implemented (later milestone).',
+    catalogCaption: 'Catalog tags with their latest reading', mqttTopicUns: 'UNS topics (source with prefix)', mqttTopicUnsHint: 'A source can declare a topic prefix; see “Documentation”.',
+    readingFresh: 'Recent reading', readingStale: 'Stale reading', pageNotFound: 'Page not found', widgetList: 'Indicators', stateOn: 'On', stateOff: 'Off',
   },
 } as const
 
@@ -63,18 +69,13 @@ export type Locale = keyof typeof messages
 export type TranslationKey = keyof typeof messages.fr
 
 export function useAppLocale() {
-  const locale = useState<Locale>('scada-locale', () => 'fr')
+  // Le cookie est lu côté serveur : le HTML rendu a déjà la bonne langue (pas de flash, <html lang> correct).
+  const cookie = useCookie<Locale>('scada-locale', { sameSite: 'lax', maxAge: 60 * 60 * 24 * 365, default: () => 'fr' })
+  const locale = useState<Locale>('scada-locale', () => (cookie.value === 'en' ? 'en' : 'fr'))
   const t = (key: TranslationKey): string => messages[locale.value][key]
   const setLocale = (value: Locale) => {
     locale.value = value
-    if (import.meta.client) {
-      localStorage.setItem('scada-locale', value)
-      document.documentElement.lang = value
-    }
+    cookie.value = value
   }
-  onMounted(() => {
-    const stored = localStorage.getItem('scada-locale')
-    setLocale(stored === 'en' ? 'en' : 'fr')
-  })
   return { locale, t, setLocale }
 }

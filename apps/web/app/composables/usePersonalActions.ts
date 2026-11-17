@@ -1,6 +1,7 @@
 import type { PersonalDashboard, PersonalTag } from '~/types/personal'
 
 export function usePersonalActions() {
+  const { locale } = useAppLocale()
   const busy = ref(false)
   const error = ref('')
   const { refresh: refreshDashboards } = usePersonalDashboards()
@@ -16,7 +17,7 @@ export function usePersonalActions() {
       await Promise.all([refreshDashboards(), refreshTags()])
       return true
     } catch {
-      error.value = 'Unable to save changes / Enregistrement impossible.'
+      error.value = locale.value === 'fr' ? 'Enregistrement impossible. Réessayez.' : 'Unable to save changes. Please try again.'
       return false
     } finally {
       busy.value = false

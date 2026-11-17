@@ -3,7 +3,7 @@ const { t } = useAppLocale()
 </script>
 
 <template>
-  <main>
+  <div>
     <header class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-700">SCADA Studio / L3</p>
       <h1 class="mt-2 text-3xl font-bold tracking-tight">{{ t('connectors') }}</h1>
@@ -17,8 +17,9 @@ const { t } = useAppLocale()
         </div>
         <p class="mt-3 text-slate-600">{{ t('mqttDescription') }}</p>
         <dl class="mt-5 space-y-4 text-sm">
-          <div><dt class="font-medium text-slate-500">{{ t('mqttTopic') }}</dt><dd class="mt-1 break-all rounded-lg bg-slate-100 p-3 font-mono">scada/{workspace}/{source}/{tag}</dd></div>
-          <div><dt class="font-medium text-slate-500">{{ t('mqttPort') }}</dt><dd class="mt-1 font-mono">127.0.0.1:1883</dd></div>
+          <div><dt class="font-medium text-slate-600">{{ t('mqttTopic') }}</dt><dd class="mt-1 break-all rounded-lg bg-slate-100 p-3 font-mono">scada/{workspace}/{source}/{tag}</dd></div>
+          <div><dt class="font-medium text-slate-600">{{ t('mqttTopicUns') }}</dt><dd class="mt-1 break-all rounded-lg bg-slate-100 p-3 font-mono">{préfixe}/{tag}</dd><dd class="mt-1 text-slate-600">{{ t('mqttTopicUnsHint') }}</dd></div>
+          <div><dt class="font-medium text-slate-600">{{ t('mqttPort') }}</dt><dd class="mt-1 font-mono">127.0.0.1:1883</dd></div>
         </dl>
       </section>
       <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="opc-title">
@@ -39,5 +40,5 @@ const { t } = useAppLocale()
         <p class="mt-2 text-amber-900">{{ t('securityText') }}</p>
       </section>
     </div>
-  </main>
+  </div>
 </template>

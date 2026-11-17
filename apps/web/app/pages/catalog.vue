@@ -25,33 +25,33 @@ function refreshAll() { refresh(); refreshTelemetry() }
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl">
-    <NuxtLink to="/" class="underline">Retour à l'accueil</NuxtLink>
-    <h1 class="mt-5 text-3xl font-bold">{{ t('catalogTitle') }}</h1>
-    <p class="mt-2">{{ t('catalogIntro') }}</p>
-    <button type="button" class="mt-4 rounded border px-3 py-2" :disabled="status === 'pending'" @click="refreshAll()">{{ t('refresh') }}</button>
-    <p v-if="status === 'pending' || status === 'idle'" role="status">{{ t('loading') }}</p>
-    <p v-else-if="error" role="alert">{{ t('catalogUnavailable') }}</p>
+  <div>
+    <h1 class="text-3xl font-bold">{{ t('catalogTitle') }}</h1>
+    <p class="mt-2 text-slate-700">{{ t('catalogIntro') }}</p>
+    <button type="button" class="mt-4 rounded-lg border border-slate-400 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50" :disabled="status === 'pending'" @click="refreshAll()">{{ t('refresh') }}</button>
+    <p v-if="status === 'pending' || status === 'idle'" role="status" class="mt-4">{{ t('loading') }}</p>
+    <p v-else-if="error" role="alert" class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900">{{ t('catalogUnavailable') }}</p>
     <template v-else-if="data">
       <section aria-labelledby="workspaces-heading" class="mt-8">
         <h2 id="workspaces-heading" class="text-xl font-semibold">{{ t('workspaces') }} ({{ data.workspaces.length }})</h2>
-        <ul><li v-for="item in data.workspaces" :key="item.id">{{ item.name }} — {{ item.slug }}</li></ul>
+        <ul class="mt-2 list-disc space-y-1 pl-6"><li v-for="item in data.workspaces" :key="item.id">{{ item.name }} — <span class="font-mono text-sm">{{ item.slug }}</span></li></ul>
       </section>
       <section aria-labelledby="sources-heading" class="mt-8">
         <h2 id="sources-heading" class="text-xl font-semibold">{{ t('sources') }} ({{ data.sources.length }})</h2>
-        <ul><li v-for="item in data.sources" :key="item.id">{{ item.name }} — {{ item.connectorType }} ({{ item.enabled ? t('active') : t('inactive') }})</li></ul>
+        <ul class="mt-2 list-disc space-y-1 pl-6"><li v-for="item in data.sources" :key="item.id">{{ item.name }} — {{ item.connectorType }} ({{ item.enabled ? t('active') : t('inactive') }})</li></ul>
       </section>
-      <p v-if="telemetryError" role="alert" class="mt-4">{{ t('telemetryUnavailable') }}</p>
+      <p v-if="telemetryError" role="alert" class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950">{{ t('telemetryUnavailable') }}</p>
       <p v-else-if="telemetryStatus === 'pending'" role="status" class="mt-4">{{ t('loadingTelemetry') }}</p>
       <section aria-labelledby="tags-heading" class="mt-8">
         <h2 id="tags-heading" class="text-xl font-semibold">{{ t('tags') }} ({{ data.tags.length }})</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead><tr><th scope="col">{{ t('name') }}</th><th scope="col">{{ t('key') }}</th><th scope="col">{{ t('type') }}</th><th scope="col">{{ t('unit') }}</th><th scope="col">{{ t('access') }}</th><th scope="col">{{ t('lastValue') }}</th><th scope="col">{{ t('timestamp') }}</th><th scope="col">{{ t('quality') }}</th></tr></thead>
-            <tbody><tr v-for="item in data.tags" :key="item.id"><td>{{ item.name }}</td><td>{{ item.key }}</td><td>{{ item.valueType }}</td><td>{{ item.unit ?? '—' }}</td><td>{{ item.readOnly ? t('readOnly') : t('declaredWrite') }}</td><td>{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td>{{ valueByTag.get(item.id)?.observedAt ? formatDateTime(valueByTag.get(item.id)!.observedAt) : '—' }}</td><td>{{ qualityFor(item.id) }}</td></tr></tbody>
+        <div class="mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <table class="w-full min-w-[48rem] text-left text-sm">
+            <caption class="sr-only">{{ t('catalogCaption') }}</caption>
+            <thead class="bg-slate-100 text-slate-800"><tr><th scope="col" class="px-4 py-3">{{ t('name') }}</th><th scope="col" class="px-4 py-3">{{ t('key') }}</th><th scope="col" class="px-4 py-3">{{ t('type') }}</th><th scope="col" class="px-4 py-3">{{ t('unit') }}</th><th scope="col" class="px-4 py-3">{{ t('access') }}</th><th scope="col" class="px-4 py-3">{{ t('lastValue') }}</th><th scope="col" class="px-4 py-3">{{ t('timestamp') }}</th><th scope="col" class="px-4 py-3">{{ t('quality') }}</th></tr></thead>
+            <tbody class="divide-y divide-slate-100"><tr v-for="item in data.tags" :key="item.id"><th scope="row" class="px-4 py-3 font-medium">{{ item.name }}</th><td class="px-4 py-3 font-mono text-xs">{{ item.key }}</td><td class="px-4 py-3">{{ item.valueType }}</td><td class="px-4 py-3">{{ item.unit ?? '—' }}</td><td class="px-4 py-3">{{ item.readOnly ? t('readOnly') : t('declaredWrite') }}</td><td class="px-4 py-3 tabular-nums">{{ valueByTag.get(item.id)?.value ?? '—' }}</td><td class="px-4 py-3">{{ valueByTag.get(item.id)?.observedAt ? formatDateTime(valueByTag.get(item.id)!.observedAt) : '—' }}</td><td class="px-4 py-3">{{ qualityFor(item.id) }}</td></tr></tbody>
           </table>
         </div>
       </section>
     </template>
-  </main>
+  </div>
 </template>

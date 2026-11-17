@@ -1,1 +1,29 @@
 @import 'tailwindcss';
+
+/* Focus visible et cohérent sur tous les éléments interactifs (WCAG 2.4.7 / 2.4.11). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid #0369a1;
+  outline-offset: 2px;
+}
+
+/* Bordure des champs de formulaire : contraste ≥ 3:1 sur fond blanc (WCAG 1.4.11).
+   Règle hors layer : elle l'emporte sur les utilitaires Tailwind (border-slate-300 = 1,5:1). */
+input:not([type='checkbox'], [type='radio'], [type='file']),
+select,
+textarea {
+  border-color: #64748b;
+}
+
+/* Le conteneur principal reçoit le focus du lien d'évitement sans anneau parasite. */
+#main-content:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
