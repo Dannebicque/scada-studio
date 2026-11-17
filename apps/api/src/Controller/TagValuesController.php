@@ -23,7 +23,8 @@ final class TagValuesController
                 'tagId' => $item->tag->id,
                 'value' => $item->value,
                 'observedAt' => $item->observedAt->format('Y-m-d\\TH:i:s') . 'Z',
-                'quality' => ($now->getTimestamp() - $item->observedAt->getTimestamp() > $staleAfterSeconds) ? 'stale' : 'good',
+                // « stale » (trop ancienne) prime sur la qualité déclarée : une vieille mesure n'est pas fiable.
+                'quality' => ($now->getTimestamp() - $item->observedAt->getTimestamp() > $staleAfterSeconds) ? 'stale' : $item->quality,
             ];
         }
 

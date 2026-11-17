@@ -43,7 +43,7 @@ Mode `tag` (défaut), un topic par tag :
 {"value":61.31,"observedAt":"2026-11-17T18:26:04.756Z","unit":"°C","quality":"good","valueType":"number"}
 ```
 
-`value` et `observedAt` suivent le contrat de l'ingestion (`observedAt` strictement croissant par topic). `unit`, `quality` (`good|bad`) et `valueType` (`number|boolean|string`) sont des champs additionnels ignorés par l'ingestion actuelle. Mode `asset` (profil `uns`), un topic par équipement :
+`value` et `observedAt` suivent le contrat de l'ingestion (`observedAt` strictement croissant par topic). `quality` (`good|uncertain|bad`) est conservée et affichée par l'ingestion ; `unit` et `valueType` (`number|boolean|string`) sont des champs additionnels ignorés. Mode `asset` (profil `uns`), un topic par équipement :
 
 ```json
 {"observedAt":"…","tags":{"temperature":{"value":65.2,"unit":"°C","quality":"good"},"running":{"value":true,"quality":"good"}}}

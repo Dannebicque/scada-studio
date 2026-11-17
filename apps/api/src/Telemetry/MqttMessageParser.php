@@ -17,8 +17,9 @@ final class MqttMessageParser
 {
     private const SEGMENT = '/^[a-zA-Z0-9_-]{1,100}$/D';
     private const MAX_SEGMENTS = 12;
+    public const QUALITIES = ['good', 'uncertain', 'bad'];
 
-    /** @return array{workspace: ?string, source: ?string, prefix: ?string, tag: string, value: mixed, observedAt: \DateTimeImmutable}|null */
+    /** @return array{workspace: ?string, source: ?string, prefix: ?string, tag: string, value: mixed, observedAt: \DateTimeImmutable, quality: string}|null */
     public function parse(string $topic, string $payload): ?array
     {
         if (strlen($topic) > 512 || strlen($payload) > 4096) {
@@ -48,9 +49,9 @@ final class MqttMessageParser
         if (!($message instanceof \stdClass) || !property_exists($message, 'value')) {
             return null;
         }
-        // Une mesure dont la qualité n'est pas "good" est ignorée : la valeur redevient « périmée »
-        // côté lecture au lieu d'être affichée comme fraîche.
-        if (property_exists($message, 'quality') && $message->quality !== 'good') {
+        // Qualité de la mesure (vocabulaire OPC simplifié) : absente = « good ». Toute autre valeur est rejetée.
+        $quality = property_exists($message, 'quality') ? $message->quality : 'good';
+        if (!is_string($quality) || !in_array($quality, self::QUALITIES, true)) {
             return null;
         }
 
@@ -79,6 +80,7 @@ final class MqttMessageParser
             'tag' => $parts[$count - 1],
             'value' => $message->value,
             'observedAt' => $observedAt,
+            'quality' => $quality,
         ];
     }
 }

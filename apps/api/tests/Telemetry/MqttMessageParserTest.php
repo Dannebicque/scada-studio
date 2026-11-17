@@ -49,6 +49,15 @@ final class MqttMessageParserTest extends TestCase
         self::assertSame(61.3, $message['value']);
     }
 
+    public function testQualityDefaultsToGoodAndAcceptsUncertainAndBad(): void
+    {
+        $parser = new MqttMessageParser();
+
+        self::assertSame('good', $parser->parse(self::TOPIC, '{"value":1}')['quality']);
+        self::assertSame('uncertain', $parser->parse(self::TOPIC, '{"value":1,"quality":"uncertain"}')['quality']);
+        self::assertSame('bad', $parser->parse(self::TOPIC, '{"value":1,"quality":"bad"}')['quality']);
+    }
+
     public function testLegacyTopicHasNoPrefix(): void
     {
         $message = (new MqttMessageParser())->parse(self::TOPIC, '{"value":1,"quality":"good"}');
@@ -80,8 +89,8 @@ final class MqttMessageParserTest extends TestCase
         yield 'uns wildcard' => ['acme/troyes/#', '{"value":1}'];
         yield 'uns empty segment' => ['acme//line1/temperature', '{"value":1}'];
         yield 'uns space in segment' => ['acme/tr oyes/line1/temperature', '{"value":1}'];
-        yield 'bad quality' => [self::TOPIC, '{"value":1,"quality":"bad"}'];
-        yield 'uncertain quality' => [self::TOPIC, '{"value":1,"quality":"uncertain"}'];
+        yield 'unknown quality' => [self::TOPIC, '{"value":1,"quality":"excellent"}'];
+        yield 'empty quality' => [self::TOPIC, '{"value":1,"quality":""}'];
         yield 'non-string quality' => [self::TOPIC, '{"value":1,"quality":true}'];
         yield 'uns status topic with text payload' => ['acme/troyes/_status', 'online'];
         yield 'missing tag' => ['scada/atelier-demo/automate-01', '{"value":1}'];

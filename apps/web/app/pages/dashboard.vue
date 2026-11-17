@@ -4,7 +4,8 @@ const route = useRoute()
 const { formatDateTime } = useLocalizedDateTime()
 type Widget = { type: string; tagId: string; title: string }
 type Entry = { key: string; origin: 'shared' | 'personal'; name: string; widgets: Widget[] }
-type Sample = { tagId: string; value: number | string | boolean; observedAt: string; quality: 'good' | 'stale' }
+import type { MeasureState, Quality } from '~/utils/measureState'
+type Sample = { tagId: string; value: number | string | boolean; observedAt: string; quality: Quality | 'stale' }
 type CatalogTag = { id: string; name: string; unit: string | null }
 
 const { data, status, error } = await useFetch<{ dashboards: { id: string; name: string; widgets: Widget[] }[] }>('/api/dashboards', { server: false, retry: 0 })
@@ -59,11 +60,8 @@ watch(telemetry, () => { now.value = Date.now() })
 let timer: ReturnType<typeof setInterval> | undefined
 onMounted(() => { timer = setInterval(() => { now.value = Date.now(); void refresh() }, 5000) })
 onUnmounted(() => { if (timer) clearInterval(timer) })
-function stateOf(sample: Sample | undefined): 'empty' | 'stale' | 'good' {
-  if (!sample) return 'empty'
-  const time = Date.parse(sample.observedAt)
-  // Tolérance de 5 s sur une horloge d'équipement légèrement en avance ; au-delà, l'horodatage est jugé invalide.
-  return Number.isFinite(time) && time - now.value <= 5000 && now.value - time <= (telemetry.value?.staleAfterSeconds ?? 30) * 1000 ? 'good' : 'stale'
+function stateOf(sample: Sample | undefined): MeasureState {
+  return measureState(sample, now.value, telemetry.value?.staleAfterSeconds ?? 30)
 }
 </script>
 

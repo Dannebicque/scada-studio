@@ -78,6 +78,19 @@ final class TelemetryHistoryIntegrationTest extends KernelTestCase
         self::assertSame(3, $this->count($tag->id), 'intervalle écoulé : échantillon');
     }
 
+    public function testOnlyGoodQualityFeedsTheHistory(): void
+    {
+        [$tag, $topic] = $this->tag('float');
+        $ingestor = static::getContainer()->get(TelemetryIngestor::class);
+
+        self::assertTrue($ingestor->ingest($topic, '{"value":20.0,"observedAt":"2026-11-03T16:00:00Z"}'));
+        self::assertTrue($ingestor->ingest($topic, '{"value":9999.0,"observedAt":"2026-11-03T16:00:20Z","quality":"bad"}'));
+        self::assertTrue($ingestor->ingest($topic, '{"value":21.0,"observedAt":"2026-11-03T16:00:21Z","quality":"uncertain"}'));
+        self::assertSame(1, $this->count($tag->id), 'seule la mesure good est historisée');
+        self::assertTrue($ingestor->ingest($topic, '{"value":22.0,"observedAt":"2026-11-03T16:00:40Z","quality":"good"}'));
+        self::assertSame(2, $this->count($tag->id));
+    }
+
     public function testBooleanTagsAreStoredAsZeroOrOneAndStringsAreNot(): void
     {
         [$tag, $topic] = $this->tag('boolean');

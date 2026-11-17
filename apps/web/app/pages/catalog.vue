@@ -7,7 +7,8 @@ type Catalog = {
   tags: { id: string; name: string; key: string; valueType: string; readOnly: boolean; unit: string | null }[]
 }
 const { data, status, error, refresh } = await useFetch<Catalog>('/api/catalog', { server: false, retry: 0 })
-const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string; quality: 'good' | 'stale' }[]; staleAfterSeconds: number }>('/api/tag-values', { server: false, retry: 0 })
+import type { Quality } from '~/utils/measureState'
+const { data: telemetry, status: telemetryStatus, error: telemetryError, refresh: refreshTelemetry } = await useFetch<{ values: { tagId: string; value: number | string | boolean; observedAt: string; quality: Quality | 'stale' }[]; staleAfterSeconds: number }>('/api/tag-values', { server: false, retry: 0 })
 const now = ref(Date.now())
 let clock: ReturnType<typeof setInterval> | undefined
 let poll: ReturnType<typeof setInterval> | undefined
@@ -17,9 +18,13 @@ const valueByTag = computed(() => new Map((telemetry.value?.values ?? []).map(it
 function qualityFor(tagId: string): string {
   const sample = valueByTag.value.get(tagId)
   if (!sample) return t('noReading')
-  const timestamp = Date.parse(sample.observedAt)
-  if (!Number.isFinite(timestamp)) return t('invalidTimestamp')
-  return now.value - timestamp > (telemetry.value?.staleAfterSeconds ?? 30) * 1000 ? t('stale') : t('valid')
+  if (!Number.isFinite(Date.parse(sample.observedAt))) return t('invalidTimestamp')
+  switch (measureState(sample, now.value, telemetry.value?.staleAfterSeconds ?? 30)) {
+    case 'stale': return t('stale')
+    case 'uncertain': return t('uncertain')
+    case 'bad': return t('bad')
+    default: return t('valid')
+  }
 }
 function refreshAll() { refresh(); refreshTelemetry() }
 </script>

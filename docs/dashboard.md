@@ -11,7 +11,7 @@ php bin/console doctrine:migrations:migrate --no-interaction
 php bin/console app:demo:catalog
 ```
 
-Start Symfony and Nuxt as usual, then open `/dashboard`. Publish telemetry with `mosquitto_pub` as described in `docs/mqtt-ingestion.md`; the value widgets update every five seconds. Quality changes to stale after 30 seconds.
+Start Symfony and Nuxt as usual, then open `/dashboard`. Publish telemetry with `mosquitto_pub` as described in `docs/mqtt-ingestion.md`; the value widgets update every five seconds. Quality changes to stale after 30 seconds; samples declared `uncertain` or `bad` by the source are labelled “Uncertain reading” / “Invalid reading”.
 
 ## Scope and security
 

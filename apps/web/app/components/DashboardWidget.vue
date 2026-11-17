@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Rendu d'un indicateur selon son type. Le contenu n'est jamais porté par la couleur seule.
+import type { MeasureState } from '~/utils/measureState'
 const props = defineProps<{
   type: string
   tagId?: string
   title: string
   value: number | string | boolean | undefined
   unit: string | null
-  state: 'good' | 'stale' | 'empty'
+  state: MeasureState
   observedAt: string
 }>()
 const { locale, t } = useAppLocale()
@@ -19,7 +20,12 @@ const text = computed(() => {
 })
 const isPercentGauge = computed(() => props.type === 'gauge' && props.unit === '%' && typeof props.value === 'number')
 const percent = computed(() => Math.min(100, Math.max(0, typeof props.value === 'number' ? props.value : 0)))
-const stateLabel = computed(() => props.state === 'good' ? t('readingFresh') : props.state === 'stale' ? t('readingStale') : t('dashboardNoValue'))
+const stateLabel = computed(() => ({ good: t('readingFresh'), stale: t('readingStale'), uncertain: t('readingUncertain'), bad: t('readingBad'), empty: t('dashboardNoValue') })[props.state])
+// Mesure invalide : la valeur reste lisible mais barrée et atténuée ; l'état est dit en texte, jamais par la couleur seule.
+const unreliable = computed(() => props.state === 'bad')
+const stateIcon = computed(() => ({ good: '●', stale: '○', uncertain: '◐', bad: '✕', empty: '○' })[props.state])
+const stateClass = computed(() => props.state === 'good' ? 'text-emerald-800' : props.state === 'bad' ? 'text-red-800' : 'text-amber-800')
+const dotClass = computed(() => props.state === 'good' ? 'bg-emerald-600' : props.state === 'bad' ? 'bg-red-700' : 'bg-amber-500')
 </script>
 
 <template>
@@ -42,8 +48,8 @@ const stateLabel = computed(() => props.state === 'good' ? t('readingFresh') : p
       <meter v-if="isPercentGauge" class="mt-3 h-3 w-full" min="0" max="100" :value="percent" :aria-label="title">{{ text }} %</meter>
     </template>
 
-    <p class="mt-3 flex items-center gap-2 text-sm" :class="state === 'good' ? 'text-emerald-800' : 'text-amber-800'">
-      <span aria-hidden="true" class="h-2 w-2 rounded-full" :class="state === 'good' ? 'bg-emerald-600' : 'bg-amber-500'" />
+    <p class="mt-3 flex items-center gap-2 text-sm" :class="stateClass">
+      <span aria-hidden="true" class="text-xs leading-none" :class="state === 'good' ? '' : 'font-bold'">{{ stateIcon }}</span>
       {{ stateLabel }}
     </p>
     <p v-if="observedAt" class="mt-2 text-xs text-slate-600">{{ observedAt }}</p>

@@ -29,7 +29,7 @@ export const messages = {
     lastChecked: 'Dernière vérification', systemStatusNote: 'La disponibilité du broker MQTT n’est pas mesurée directement.',
     dashboardsShared: 'Tableaux partagés', dashboardsPersonal: 'Mes tableaux', chartPending: 'Courbe disponible avec l’historique (lot ultérieur).',
     catalogCaption: 'Variables du catalogue avec leur dernière mesure', mqttTopicUns: 'Topics UNS (source avec préfixe)', mqttTopicUnsHint: 'Une source peut déclarer un préfixe de topic ; voir « Documentation ».',
-    readingFresh: 'Mesure récente', readingStale: 'Mesure périmée', pageNotFound: 'Page introuvable', widgetList: 'Indicateurs', stateOn: 'Actif', stateOff: 'Inactif',
+    readingFresh: 'Mesure récente', readingStale: 'Mesure périmée', readingUncertain: 'Mesure douteuse', readingBad: 'Mesure invalide', uncertain: 'Douteuse', bad: 'Invalide', pageNotFound: 'Page introuvable', widgetList: 'Indicateurs', stateOn: 'Actif', stateOff: 'Inactif',
   },
   en: {
     documentation: 'Documentation', home: 'Home', catalog: 'Catalog', dashboard: 'Dashboards', synoptic: 'Synoptics', connectors: 'Connectors',
@@ -61,7 +61,7 @@ export const messages = {
     lastChecked: 'Last checked', systemStatusNote: 'MQTT broker availability is not monitored directly.',
     dashboardsShared: 'Shared dashboards', dashboardsPersonal: 'My dashboards', chartPending: 'Chart available once history is implemented (later milestone).',
     catalogCaption: 'Catalog tags with their latest reading', mqttTopicUns: 'UNS topics (source with prefix)', mqttTopicUnsHint: 'A source can declare a topic prefix; see “Documentation”.',
-    readingFresh: 'Recent reading', readingStale: 'Stale reading', pageNotFound: 'Page not found', widgetList: 'Indicators', stateOn: 'On', stateOff: 'Off',
+    readingFresh: 'Recent reading', readingStale: 'Stale reading', readingUncertain: 'Uncertain reading', readingBad: 'Invalid reading', uncertain: 'Uncertain', bad: 'Invalid', pageNotFound: 'Page not found', widgetList: 'Indicators', stateOn: 'On', stateOff: 'Off',
   },
 } as const
 

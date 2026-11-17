@@ -51,13 +51,14 @@ final class TelemetryIngestor
         }
 
         $previousValue = $current?->value;
-        $store = TelemetryHistory::shouldStore($previousValue, $current?->sampledAt, $message['value'], $observedAt);
+        // Seules les mesures de bonne qualité alimentent l'historique : une valeur douteuse fausserait moyennes et extrema.
+        $store = $message['quality'] === 'good' && TelemetryHistory::shouldStore($previousValue, $current?->sampledAt, $message['value'], $observedAt);
         try {
             if ($current) {
-                $current->update($message['value'], $observedAt);
+                $current->update($message['value'], $observedAt, $message['quality']);
                 $value = $current;
             } else {
-                $value = new TagValue($tag, $message['value'], $observedAt);
+                $value = new TagValue($tag, $message['value'], $observedAt, $message['quality']);
                 $this->em->persist($value);
             }
             if ($store && TelemetryHistory::toNumber($message['value']) !== null) {

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 const { t } = useAppLocale()
 const { formatTime } = useLocalizedDateTime()
-type Sample = { observedAt: string; quality: 'good' | 'stale' }
+import type { Quality } from '~/utils/measureState'
+type Sample = { observedAt: string; quality: Quality | 'stale' }
 type Snapshot = { values: Sample[]; staleAfterSeconds: number }
 const { data: health, status: healthStatus, error: healthError, refresh: refreshHealth } = await useFetch<{ status: string }>('/api/health', { server: false, retry: 0 })
 const { data: telemetry, error: telemetryError, refresh: refreshTelemetry } = await useFetch<Snapshot>('/api/tag-values', { server: false, retry: 0 })

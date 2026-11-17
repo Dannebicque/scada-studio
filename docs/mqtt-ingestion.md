@@ -43,7 +43,7 @@ Besides the legacy contract, a source can declare a **topic prefix** (`data_sour
 
 - Topics have 2 to 12 segments, each `[a-zA-Z0-9_-]{1,100}`. The first segment `scada` is reserved for the legacy 4-segment contract and cannot be used as a prefix.
 - The consumer subscribes to `scada/+/+/+` plus one `{prefix}/+` filter per **enabled** MQTT source with a prefix (200 at most). It never subscribes to `#`. The catalogue is re-read every 30 seconds and the subscriber is restarted when the filters change, so a source added or enabled is picked up without restarting the consumer.
-- Payload: same `value` / optional `observedAt`. Extra fields (`unit`, `valueType`) are ignored. A `quality` field other than `"good"` makes the sample ignored, so the value becomes stale instead of being shown as fresh. One-JSON-per-asset payloads (`{"tags": {…}}`) are not ingested.
+- Payload: same `value` / optional `observedAt`. Extra fields (`unit`, `valueType`) are ignored. Optional `quality`: `good` (default), `uncertain` or `bad`; any other value rejects the message. The sample is stored with its quality and shown as such (text label + icon, never colour only). Only `good` samples feed the history, so doubtful or invalid values never pollute the charts. A value too old is reported as `stale` by the API (age > `staleAfterSeconds`), which takes precedence over the declared quality. One-JSON-per-asset payloads (`{"tags": {…}}`) are not ingested.
 - Apply the migration (`php bin/console doctrine:migrations:migrate`), then create sources and tags from an inferred model:
 
 ```bash

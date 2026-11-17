@@ -82,7 +82,7 @@ final class UnsIngestionIntegrationTest extends KernelTestCase
 
         self::assertTrue($ingestor->ingest($topic, '{"value":61.5,"observedAt":"2026-11-03T16:00:02Z","unit":"°C","quality":"good"}'));
         self::assertFalse($ingestor->ingest($topic, '{"value":50,"observedAt":"2026-11-03T16:00:01Z"}'), 'horodatage plus ancien');
-        self::assertFalse($ingestor->ingest($topic, '{"value":99,"observedAt":"2026-11-03T16:00:09Z","quality":"bad"}'), 'qualité bad ignorée');
+        self::assertFalse($ingestor->ingest($topic, '{"value":99,"observedAt":"2026-11-03T16:00:09Z","quality":"excellent"}'), 'qualité inconnue');
         self::assertFalse($ingestor->ingest($prefix.'/inconnu', '{"value":1}'), 'tag inconnu');
         self::assertFalse($ingestor->ingest('autre/prefixe/temperature', '{"value":1}'), 'préfixe inconnu');
         self::assertFalse($ingestor->ingest($topic, '{"value":"texte"}'), 'type invalide pour un tag float');
@@ -91,6 +91,14 @@ final class UnsIngestionIntegrationTest extends KernelTestCase
         $saved = $this->em->find(TagValue::class, $tag->id);
         self::assertNotNull($saved);
         self::assertSame(61.5, $saved->value);
+        self::assertSame('good', $saved->quality);
+
+        // Une mesure de mauvaise qualité est conservée avec sa qualité, pas ignorée.
+        self::assertTrue($ingestor->ingest($topic, '{"value":99.5,"observedAt":"2026-11-03T16:00:09Z","quality":"bad"}'));
+        $this->em->clear();
+        $saved = $this->em->find(TagValue::class, $tag->id);
+        self::assertSame('bad', $saved->quality);
+        self::assertSame(99.5, $saved->value);
     }
 
     public function testTopicPrefixIsUniqueAcrossWorkspaces(): void
