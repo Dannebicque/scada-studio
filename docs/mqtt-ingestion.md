@@ -65,9 +65,12 @@ The consumer reads its connection from environment variables (never from command
 | `MQTT_PORT` | `1883` | Broker port |
 | `MQTT_TLS` | off | `1` to encrypt the connection (system certificate authorities) |
 | `MQTT_CAFILE` | — | PEM file of a private certificate authority (implies TLS) |
+| `UNS_ALLOWED_PREFIXES` | — | UNS prefixes the administration API may explore and provision (comma-separated). Required in production (see `docs/uns-inference.md`) |
 | `MQTT_USERNAME`, `MQTT_PASSWORD` | — | Credentials, to be set together. Passed to `mosquitto_sub` through a temporary `0600` options file removed on exit |
 
 In `APP_ENV=prod` the consumer refuses to start unless `MQTT_HOST` is set, and refuses an unencrypted connection to a non-loopback broker. Use a dedicated account whose ACL allows **read only** on the prefixes you ingest. Secrets belong in `.env.local` or the Symfony secrets vault, not in `.env`.
+
+`UNS_ALLOWED_PREFIXES` is read by the administration API, not by the consumer.
 
 The `-o` options-file mechanism of `mosquitto_sub` has not been exercised against an authenticated broker in this repository's tests: check it on your broker before relying on it.
 
