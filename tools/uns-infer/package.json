@@ -1,0 +1,11 @@
+{
+  "name": "uns-infer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Déduit un modèle UNS et des pages dashboard (page.schema.json) à partir de trames MQTT",
+  "type": "module",
+  "scripts": { "start": "node infer.mjs", "test": "node --test" },
+  "engines": { "node": ">=20" },
+  "dependencies": { "mqtt": "^5.10.0" },
+  "devDependencies": { "ajv": "^8.17.1" }
+}

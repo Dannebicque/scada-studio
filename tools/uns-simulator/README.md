@@ -16,6 +16,8 @@ Avec le broker Mosquitto du dépôt (`docker compose --env-file .env -f infra/co
 npm start
 ```
 
+Pour en déduire un dashboard, voir `tools/uns-infer`.
+
 Sans broker : `node simulator.mjs --dry-run` affiche les trames sur stdout. `--list-topics` liste l'espace de noms.
 
 ## Profils
