@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Telemetry\MqttSubscriptionResolver;
 use App\Telemetry\TelemetryIngestor;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -15,8 +16,10 @@ final class ConsumeMqttCommand extends Command
 {
     private bool $stopping = false;
 
-    public function __construct(private readonly TelemetryIngestor $ingestor)
-    {
+    public function __construct(
+        private readonly TelemetryIngestor $ingestor,
+        private readonly MqttSubscriptionResolver $subscriptions,
+    ) {
         parent::__construct();
     }
 
@@ -36,9 +39,21 @@ final class ConsumeMqttCommand extends Command
 
         $attempt = 0;
         while (!$this->stopping) {
+            // Recalculé à chaque (re)connexion : une source UNS ajoutée est prise en compte au prochain redémarrage.
+            try {
+                $filters = $this->subscriptions->topicFilters();
+            } catch (\Throwable $e) {
+                $output->writeln('<error>Cannot load UNS subscriptions, using legacy topics only: '.$e->getMessage().'</error>');
+                $filters = [MqttSubscriptionResolver::LEGACY_FILTER];
+            }
+            $topicArgs = [];
+            foreach ($filters as $filter) {
+                array_push($topicArgs, '-t', $filter);
+            }
+
             try {
                 $process = proc_open(
-                ['mosquitto_sub', '-h', '127.0.0.1', '-p', '1883', '-q', '0', '-t', 'scada/+/+/+', '-F', '%t %p'],
+                ['mosquitto_sub', '-h', '127.0.0.1', '-p', '1883', '-q', '0', ...$topicArgs, '-F', '%t %p'],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
                 $pipes,
                 );
@@ -54,7 +69,7 @@ final class ConsumeMqttCommand extends Command
             fclose($pipes[0]);
             stream_set_blocking($pipes[1], false);
             stream_set_blocking($pipes[2], false);
-            $output->writeln('<info>Listening for MQTT telemetry on localhost:1883. Press Ctrl+C to stop.</info>');
+            $output->writeln('<info>Listening for MQTT telemetry on localhost:1883 ('.count($filters).' topic filter(s)). Press Ctrl+C to stop.</info>');
             $startedAt = time();
             $buffer = '';
             $error = '';

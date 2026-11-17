@@ -13,6 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'data_source')]
 #[ORM\UniqueConstraint(name: 'uniq_source_workspace_key', columns: ['workspace_id', 'source_key'])]
+#[ORM\UniqueConstraint(name: 'uniq_source_topic_prefix', columns: ['topic_prefix'])]
 #[ApiResource(operations: [new Get(), new GetCollection()])]
 class DataSource
 {
@@ -35,6 +36,14 @@ class DataSource
 
     #[ORM\Column(type: 'boolean')]
     public bool $enabled = false;
+
+    /**
+     * Préfixe de topic UNS (ex. "acme/troyes/packaging/line1/filler") : un message publié sur
+     * "{topicPrefix}/{tagKey}" alimente le tag correspondant. Unique sur toute l'instance pour
+     * qu'un topic ne puisse jamais désigner deux workspaces. Réservé : "scada" (contrat historique).
+     */
+    #[ORM\Column(name: 'topic_prefix', length: 512, nullable: true)]
+    public ?string $topicPrefix = null;
 
     public function __construct(Workspace $workspace, string $key, string $name, string $connectorType)
     {

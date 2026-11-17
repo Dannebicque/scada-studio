@@ -27,11 +27,22 @@ Les identifiants `core.*` sont des propositions ; le registre de widgets du cont
 
 ## Association élément ↔ tag
 
-Un élément est associé quand les deux derniers segments de son topic (`équipement/tag`) égalent `source/tag` d'un tag du workspace. Une correspondance ambiguë ou absente n'est jamais devinée : l'élément est signalé « Non associé » et ignoré à l'enregistrement.
+Deux règles, dans cet ordre, sans jamais deviner :
+
+1. les deux derniers segments du topic (`équipement/tag`) égalent `source/tag` d'un tag du workspace ;
+2. le `binding` de l'élément (`packaging.line1.filler.temperature`) égale `source/tag`, la source étant le chemin relatif de l'asset en minuscules joint par `-` (`packaging-line1-filler`) : c'est la règle de nommage de `app:uns:provision`.
+
+Une correspondance ambiguë ou absente donne « Non associé » : l'élément est ignoré à l'enregistrement.
+
+## Ingestion des valeurs
+
+Les topics hiérarchiques sont ingérés via le préfixe de topic d'une source (voir `docs/mqtt-ingestion.md`, section « UNS topics »). Chaîne complète en développement : simulateur → `uns-infer` → `app:uns:provision --enable` → `app:mqtt:consume` → `/uns-import`.
 
 ## Limites
 
-- Le catalogue ne connaît que `workspace/source/tag` ; une hiérarchie UNS profonde n'est donc associable que par ses deux derniers segments, jusqu'à ce que les assets sémantiques (projection UNS) servent de cible de mapping.
-- L'ingestion MQTT actuelle n'accepte que 4 segments de topic : les trames du profil `uns` profond ne sont pas ingérées, seulement inférées.
+- Le préfixe de topic est unique sur toute l'instance : deux workspaces ne peuvent pas ingérer le même topic.
+- Les abonnements du consommateur sont calculés au démarrage : redémarrer après ajout ou activation d'une source.
+- Le mode « un JSON par asset » du simulateur et de `uns-infer` n'est pas ingéré (seulement inféré).
+- Les tests d'intégration PHP (`UnsIngestionIntegrationTest`) exigent PostgreSQL `_test` ; la CI backend les exécute.
 - L'import n'écrit pas de layout : la grille de la page inférée sert à l'aperçu ; le dashboard personnel conserve l'ordre de lecture.
 - Fonction de développement local : broker anonyme, pas de production.

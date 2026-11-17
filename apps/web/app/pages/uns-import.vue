@@ -68,7 +68,7 @@ async function onFile(event: Event) {
 const visible = computed(() => (page.value?.elements ?? []).filter(el => !removed.value.has(el.id)))
 const plan = computed(() => page.value ? toPersonalWidgets({ ...page.value, elements: visible.value }, tags.value) : null)
 const tagById = computed(() => new Map(tags.value.map(tag => [tag.tagId, tag])))
-const matched = (el: ImportElement) => matchTag(el.topic, tags.value)
+const matched = (el: ImportElement) => matchTag(el.topic, tags.value, el.binding)
 function removeElement(id: string) { removed.value = new Set([...removed.value, id]) }
 function restoreAll() { removed.value = new Set() }
 
@@ -115,8 +115,8 @@ async function save() {
           <input id="import-file" type="file" accept=".json,application/json" class="block rounded border p-2" aria-describedby="import-help" @change="onFile">
         </div>
         <p id="import-help" class="basis-full text-sm text-slate-600">{{ fr
-          ? 'Un élément est associé à un tag du catalogue lorsque ses deux derniers segments de topic (équipement/tag) correspondent à source/tag. Les éléments non associés sont signalés et ignorés à l’enregistrement.'
-          : 'An element is matched to a catalog tag when its last two topic segments (asset/tag) equal source/tag. Unmatched elements are flagged and skipped on save.' }}</p>
+          ? 'Un élément est associé à un tag du catalogue lorsque ses deux derniers segments de topic (équipement/tag) correspondent à source/tag, ou lorsque son chemin correspond à une source créée par app:uns:provision. Les éléments non associés sont signalés et ignorés à l’enregistrement.'
+          : 'An element is matched to a catalog tag when its last two topic segments (asset/tag) equal source/tag, or when its path matches a source created by app:uns:provision. Unmatched elements are flagged and skipped on save.' }}</p>
       </section>
 
       <p v-if="parseError" role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-900">{{ errorText[parseError][fr ? 'fr' : 'en'] }}</p>

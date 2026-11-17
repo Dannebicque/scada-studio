@@ -23,14 +23,20 @@ final class TelemetryIngestor
             return false;
         }
 
-        $tag = $this->em->getRepository(Tag::class)->createQueryBuilder('t')
+        $query = $this->em->getRepository(Tag::class)->createQueryBuilder('t')
             ->join('t.source', 's')
             ->join('s.workspace', 'w')
-            ->where('w.slug = :workspace AND s.key = :source AND t.key = :tag')
-            ->setParameter('workspace', $message['workspace'])
-            ->setParameter('source', $message['source'])
-            ->setParameter('tag', $message['tag'])
-            ->getQuery()->getOneOrNullResult();
+            ->setParameter('tag', $message['tag']);
+        if ($message['prefix'] === null) {
+            $query->where('w.slug = :workspace AND s.key = :source AND t.key = :tag')
+                ->setParameter('workspace', $message['workspace'])
+                ->setParameter('source', $message['source']);
+        } else {
+            // UNS : topicPrefix est unique sur l'instance, donc la résolution est sans ambiguïté.
+            $query->where('s.topicPrefix = :prefix AND t.key = :tag')
+                ->setParameter('prefix', $message['prefix']);
+        }
+        $tag = $query->getQuery()->getOneOrNullResult();
 
         if (!$tag || $tag->source->connectorType !== 'mqtt' || !$tag->source->enabled) {
             return false;

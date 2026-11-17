@@ -37,6 +37,24 @@ Payload: JSON object with `value` and optional ISO-8601 `observedAt`.
 
 The source must exist, be enabled, and have connector type `mqtt`. Values must match the tag's declared type. Oversized payloads, unknown topics, invalid values, future timestamps, and stale measurements are ignored.
 
+## UNS topics (hierarchical)
+
+Besides the legacy contract, a source can declare a **topic prefix** (`data_source.topic_prefix`, unique across the instance). A message published on `{prefix}/{tagKey}` updates the matching tag, e.g. prefix `acme/troyes/packaging/line1/filler` and topic `acme/troyes/packaging/line1/filler/temperature`.
+
+- Topics have 2 to 12 segments, each `[a-zA-Z0-9_-]{1,100}`. The first segment `scada` is reserved for the legacy 4-segment contract and cannot be used as a prefix.
+- The consumer subscribes to `scada/+/+/+` plus one `{prefix}/+` filter per **enabled** MQTT source with a prefix (200 at most). It never subscribes to `#`. Filters are computed when the consumer (re)starts: restart it after adding or enabling a source.
+- Payload: same `value` / optional `observedAt`. Extra fields (`unit`, `valueType`) are ignored. A `quality` field other than `"good"` makes the sample ignored, so the value becomes stale instead of being shown as fresh. One-JSON-per-asset payloads (`{"tags": {…}}`) are not ingested.
+- Apply the migration (`php bin/console doctrine:migrations:migrate`), then create sources and tags from an inferred model:
+
+```bash
+node tools/uns-infer/infer.mjs --topic 'acme/troyes/#' --out out
+php bin/console app:uns:provision atelier-demo out/uns-model.json --enable
+php bin/console app:mqtt:consume
+node tools/uns-simulator/simulator.mjs --retain   # profile "uns"
+```
+
+`app:uns:provision` (development only) creates one source per asset (key = relative asset path in lowercase joined with `-`, topic prefix = asset topic) and one tag per learned variable (`boolean`, `string`, or `float` for numbers). Sources are created **disabled** unless `--enable` is given. Existing sources and tags are left untouched, so the command is idempotent.
+
 ## Limitations
 
 The subscriber is intended for local prototyping, not production. It uses an anonymous broker bound to localhost, a basic bounded restart delay but no production-grade process supervisor, no persistent message history, and 5-second client polling. Do not expose the broker publicly. Production requires TLS/authentication, operational monitoring, and a proper MQTT client library. Historical retention is deferred to the persistence milestone.

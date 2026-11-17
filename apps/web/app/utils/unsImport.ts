@@ -6,7 +6,7 @@ export const MAX_IMPORT_ELEMENTS = 300
 export const MAX_PERSONAL_WIDGETS = 100 // limite imposée par l'API (PersonalDashboardWriteController)
 
 export type ImportLayout = { x: number; y: number; width: number; height: number }
-export type ImportElement = { id: string; type: string; label: string; topic: string | null; unit: string | null; layout: ImportLayout }
+export type ImportElement = { id: string; type: string; label: string; topic: string | null; binding: string | null; unit: string | null; layout: ImportLayout }
 export type ImportPage = { id: string; title: string; elements: ImportElement[] }
 export type ImportError = 'tooLarge' | 'invalidJson' | 'invalidShape' | 'unsupportedKind' | 'tooManyElements' | 'duplicateId'
 export type ImportTag = { tagId: string; path: string; name: string }
@@ -54,6 +54,7 @@ export function parseInferredPage(source: string): { page: ImportPage; error?: u
       type,
       label: text(item.properties.label, 120) ?? elementId,
       topic: text(item.properties.topic, 512),
+      binding: text(item.bindings.value, 512),
       unit: text(item.properties.unit, 20),
       layout: { x: int(layout.x, 0, 11, 0), y: int(layout.y, 0, 10_000, 0), width, height: int(layout.height, 1, 12, 2) },
     })
@@ -63,13 +64,30 @@ export function parseInferredPage(source: string): { page: ImportPage; error?: u
   return { page: { id, title, elements } }
 }
 
-/** Associe un topic UNS à un tag du catalogue : mêmes deux derniers segments (asset/tag ↔ source/tag). */
-export function matchTag(topic: string | null, tags: ImportTag[]): ImportTag | null {
-  if (!topic) return null
-  const tail = topic.split('/').filter(Boolean).slice(-2).join('/')
-  if (!tail.includes('/')) return null
-  const found = tags.filter(tag => tag.path === topic || tag.path.endsWith('/' + tail))
-  return found.length === 1 ? found[0]! : null // ambigu = non associé : jamais de choix arbitraire
+/**
+ * Associe un élément à un tag du catalogue, sans jamais deviner. Deux règles, par ordre :
+ *  1. les deux derniers segments du topic (équipement/tag) égalent source/tag ;
+ *  2. le binding « chemin.relatif.de.l.asset.tag » égale source/tag, où la source est le chemin relatif
+ *     de l'asset en minuscules joint par « - » (règle de nommage de `app:uns:provision`).
+ * Une correspondance ambiguë ou absente donne null.
+ */
+export function matchTag(topic: string | null, tags: ImportTag[], binding: string | null = null): ImportTag | null {
+  const unique = (found: ImportTag[]) => (found.length === 1 ? found[0]! : null)
+  if (topic) {
+    const tail = topic.split('/').filter(Boolean).slice(-2).join('/')
+    if (tail.includes('/')) {
+      const found = tags.filter(tag => tag.path === topic || tag.path.endsWith('/' + tail))
+      if (found.length) return unique(found)
+    }
+  }
+  if (binding) {
+    const parts = binding.split('.').filter(Boolean)
+    if (parts.length >= 2) {
+      const tail = parts.slice(0, -1).join('-').toLowerCase() + '/' + parts[parts.length - 1]
+      return unique(tags.filter(tag => tag.path.endsWith('/' + tail)))
+    }
+  }
+  return null
 }
 
 export function toPersonalWidgets(page: ImportPage, tags: ImportTag[]): { widgets: PersonalWidget[]; unmatched: ImportElement[]; duplicates: number } {
@@ -80,7 +98,7 @@ export function toPersonalWidgets(page: ImportPage, tags: ImportTag[]): { widget
   for (const el of page.elements) {
     const type = WIDGET_TYPES[el.type]
     if (!type) { if (el.type !== SECTION_TYPE) unmatched.push(el); continue }
-    const tag = matchTag(el.topic, tags)
+    const tag = matchTag(el.topic, tags, el.binding)
     if (!tag) { unmatched.push(el); continue }
     if (used.has(tag.tagId)) { duplicates += 1; continue }
     used.add(tag.tagId)

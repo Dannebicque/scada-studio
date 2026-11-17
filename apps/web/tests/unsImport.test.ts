@@ -2,8 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { matchTag, parseInferredPage, toPersonalWidgets } from '../app/utils/unsImport.ts'
 
-const el = (id: string, type: string, topic?: string, extra: object = {}) => ({
-  id, type, properties: { label: id, ...(topic ? { topic } : {}) }, bindings: {}, layout: { x: 0, y: 0, width: 3, height: 2, ...extra },
+const el = (id: string, type: string, topic?: string, extra: object = {}, binding?: string) => ({
+  id, type, properties: { label: id, ...(topic ? { topic } : {}) }, bindings: binding ? { value: binding } : {}, layout: { x: 0, y: 0, width: 3, height: 2, ...extra },
 })
 const page = (elements: object[], extra: object = {}) => JSON.stringify({ schemaVersion: 1, id: 'p', kind: 'dashboard', title: 'T', elements, ...extra })
 const tags = [
@@ -56,4 +56,27 @@ test('conversion vers les widgets personnels (types supportés, sections ignoré
   ])
   assert.equal(r.duplicates, 1)
   assert.deepEqual(r.unmatched.map(e => e.id).sort(), ['u', 'w'])
+})
+
+test('association par binding : source provisionnée = chemin relatif aplati en minuscules', () => {
+  const provisioned = [
+    { tagId: 'p1', path: 'ws/packaging-line1-filler/temperature', name: 'temperature' },
+    { tagId: 'p2', path: 'ws/packaging-line1-conveyor/temperature', name: 'temperature' },
+    { tagId: 'p3', path: 'ws/utilities-boiler/temperature', name: 'temperature' },
+  ]
+  // Le topic seul (filler/temperature) ne correspond à aucune source ; le binding, si.
+  assert.equal(matchTag('acme/troyes/packaging/line1/filler/temperature', provisioned), null)
+  assert.equal(matchTag('acme/troyes/packaging/line1/filler/temperature', provisioned, 'Packaging.line1.filler.temperature')?.tagId, 'p1')
+  assert.equal(matchTag(null, provisioned, 'utilities.boiler.temperature')?.tagId, 'p3')
+  assert.equal(matchTag(null, provisioned, 'utilities.boiler.inconnu'), null)
+  assert.equal(matchTag(null, provisioned, 'temperature'), null)
+  // une correspondance par topic ambiguë ne retombe pas sur le binding : jamais de choix arbitraire
+  const ambiguous = [...provisioned, { tagId: 'x', path: 'other/filler/temperature', name: 'temperature' }, { tagId: 'y', path: 'ws/filler/temperature', name: 'temperature' }]
+  assert.equal(matchTag('a/filler/temperature', ambiguous, 'packaging.line1.filler.temperature'), null)
+})
+
+test('toPersonalWidgets utilise le binding du fichier importé', () => {
+  const provisioned = [{ tagId: 'p1', path: 'ws/packaging-line1-filler/temperature', name: 'temperature' }]
+  const { page: p } = parseInferredPage(page([el('t', 'core.timeseries', 'acme/troyes/packaging/line1/filler/temperature', {}, 'packaging.line1.filler.temperature')]))
+  assert.deepEqual(toPersonalWidgets(p!, provisioned).widgets, [{ type: 'chart', tagId: 'p1', title: 't' }])
 })

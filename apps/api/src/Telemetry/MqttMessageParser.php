@@ -7,10 +7,18 @@ namespace App\Telemetry;
 /**
  * Validates the transport envelope independently of Doctrine and the MQTT client.
  * Domain validation (source enabled, tag type, ordering) remains in TelemetryIngestor.
+ *
+ * Two topic shapes are accepted:
+ *  - legacy contract: scada/{workspace}/{source}/{tag} (exactly 4 segments);
+ *  - UNS: {prefix…}/{tag} with 2 to 12 segments, resolved later through DataSource::$topicPrefix.
+ * The "scada" first segment is reserved for the legacy contract.
  */
 final class MqttMessageParser
 {
-    /** @return array{workspace: string, source: string, tag: string, value: mixed, observedAt: \DateTimeImmutable}|null */
+    private const SEGMENT = '/^[a-zA-Z0-9_-]{1,100}$/D';
+    private const MAX_SEGMENTS = 12;
+
+    /** @return array{workspace: ?string, source: ?string, prefix: ?string, tag: string, value: mixed, observedAt: \DateTimeImmutable}|null */
     public function parse(string $topic, string $payload): ?array
     {
         if (strlen($topic) > 512 || strlen($payload) > 4096) {
@@ -18,13 +26,18 @@ final class MqttMessageParser
         }
 
         $parts = explode('/', $topic);
-        if (count($parts) !== 4 || $parts[0] !== 'scada') {
+        $count = count($parts);
+        if ($count < 2 || $count > self::MAX_SEGMENTS) {
             return null;
         }
-        foreach (array_slice($parts, 1) as $segment) {
-            if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/D', $segment)) {
+        foreach ($parts as $segment) {
+            if (!preg_match(self::SEGMENT, $segment)) {
                 return null;
             }
+        }
+        $legacy = $parts[0] === 'scada';
+        if ($legacy && $count !== 4) {
+            return null;
         }
 
         try {
@@ -33,6 +46,11 @@ final class MqttMessageParser
             return null;
         }
         if (!($message instanceof \stdClass) || !property_exists($message, 'value')) {
+            return null;
+        }
+        // Une mesure dont la qualité n'est pas "good" est ignorée : la valeur redevient « périmée »
+        // côté lecture au lieu d'être affichée comme fraîche.
+        if (property_exists($message, 'quality') && $message->quality !== 'good') {
             return null;
         }
 
@@ -55,9 +73,10 @@ final class MqttMessageParser
         }
 
         return [
-            'workspace' => $parts[1],
-            'source' => $parts[2],
-            'tag' => $parts[3],
+            'workspace' => $legacy ? $parts[1] : null,
+            'source' => $legacy ? $parts[2] : null,
+            'prefix' => $legacy ? null : implode('/', array_slice($parts, 0, -1)),
+            'tag' => $parts[$count - 1],
             'value' => $message->value,
             'observedAt' => $observedAt,
         ];
