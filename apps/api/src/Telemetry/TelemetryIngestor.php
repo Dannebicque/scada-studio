@@ -13,6 +13,7 @@ final class TelemetryIngestor
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly MqttMessageParser $parser,
+        private readonly TelemetryHistory $history,
     ) {
     }
 
@@ -49,15 +50,30 @@ final class TelemetryIngestor
             return false;
         }
 
+        $previousValue = $current?->value;
+        $store = TelemetryHistory::shouldStore($previousValue, $current?->sampledAt, $message['value'], $observedAt);
         try {
             if ($current) {
                 $current->update($message['value'], $observedAt);
+                $value = $current;
             } else {
-                $this->em->persist(new TagValue($tag, $message['value'], $observedAt));
+                $value = new TagValue($tag, $message['value'], $observedAt);
+                $this->em->persist($value);
+            }
+            if ($store && TelemetryHistory::toNumber($message['value']) !== null) {
+                $value->sampledAt = $observedAt;
             }
             $this->em->flush();
         } catch (\InvalidArgumentException) {
             return false;
+        }
+        if ($store) {
+            // Après le flush : la valeur courante est acquise même si l'écriture de l'historique échoue.
+            try {
+                $this->history->record($tag->id, $message['value'], $observedAt);
+            } catch (\Throwable) {
+                // L'historique est secondaire : ne jamais perdre la valeur courante pour lui.
+            }
         }
 
         return true;

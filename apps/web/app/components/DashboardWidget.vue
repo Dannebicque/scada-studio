@@ -2,6 +2,7 @@
 // Rendu d'un indicateur selon son type. Le contenu n'est jamais porté par la couleur seule.
 const props = defineProps<{
   type: string
+  tagId?: string
   title: string
   value: number | string | boolean | undefined
   unit: string | null
@@ -46,6 +47,7 @@ const stateLabel = computed(() => props.state === 'good' ? t('readingFresh') : p
       {{ stateLabel }}
     </p>
     <p v-if="observedAt" class="mt-2 text-xs text-slate-600">{{ observedAt }}</p>
-    <p v-if="type === 'chart'" class="mt-2 text-xs text-slate-600">{{ t('chartPending') }}</p>
+    <TagHistoryChart v-if="type === 'chart' && tagId" :tag-id="tagId" :title="title" :unit="unit" />
+    <p v-else-if="type === 'chart'" class="mt-2 text-xs text-slate-600">{{ t('chartPending') }}</p>
   </article>
 </template>

@@ -110,9 +110,10 @@ function stateOf(sample: Sample | undefined): 'empty' | 'stale' | 'good' {
       </div>
       <p v-if="!visibleWidgets.length" class="rounded-xl border border-dashed border-slate-400 p-6 text-slate-700">{{ t('dashboardEmpty') }}</p>
       <ul v-else :aria-label="t('widgetList')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <li v-for="(widget, index) in visibleWidgets" :key="widget.tagId">
+        <li v-for="(widget, index) in visibleWidgets" :key="widget.tagId" :class="widget.type === 'chart' ? 'sm:col-span-2' : ''">
           <DashboardWidget
             :type="widget.type"
+            :tag-id="widget.tagId"
             :title="widget.title"
             :value="values.get(widget.tagId)?.value"
             :unit="unitByTag.get(widget.tagId) ?? null"

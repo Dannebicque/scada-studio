@@ -6,6 +6,7 @@ namespace App\Command;
 
 use App\Telemetry\MqttConnection;
 use App\Telemetry\MqttSubscriptionResolver;
+use App\Telemetry\TelemetryHistory;
 use App\Telemetry\TelemetryIngestor;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -19,10 +20,12 @@ final class ConsumeMqttCommand extends Command
     private const REFRESH_SECONDS = 30;
 
     private bool $stopping = false;
+    private int $nextPrune = 0;
 
     public function __construct(
         private readonly TelemetryIngestor $ingestor,
         private readonly MqttSubscriptionResolver $subscriptions,
+        private readonly TelemetryHistory $history,
     ) {
         parent::__construct();
     }
@@ -56,7 +59,9 @@ final class ConsumeMqttCommand extends Command
         }
 
         $attempt = 0;
+        $retentionDays = TelemetryHistory::retentionDays($environment);
         while (!$this->stopping) {
+            $this->pruneHistory($retentionDays, $output);
             // Relu à chaque (re)connexion, puis toutes les REFRESH_SECONDS pendant l'écoute.
             $filters = $this->currentFilters($output);
             $optionsFile = $connection->createOptionsFile();
@@ -127,6 +132,7 @@ final class ConsumeMqttCommand extends Command
                             }
                         }
                     }
+                    $this->pruneHistory($retentionDays, $output);
                     if (time() >= $nextRefresh) {
                         $nextRefresh = time() + self::REFRESH_SECONDS;
                         if ($this->currentFilters($output) !== $filters) {
@@ -168,6 +174,23 @@ final class ConsumeMqttCommand extends Command
 
         $output->writeln('<info>MQTT consumer stopped.</info>');
         return Command::SUCCESS;
+    }
+
+    /** Purge de l'historique au démarrage puis une fois par heure. */
+    private function pruneHistory(int $days, OutputInterface $output): void
+    {
+        if (time() < $this->nextPrune) {
+            return;
+        }
+        $this->nextPrune = time() + 3600;
+        try {
+            $deleted = $this->history->prune($days);
+            if ($deleted > 0) {
+                $output->writeln('<info>History: '.$deleted.' sample(s) older than '.$days.' day(s) removed.</info>');
+            }
+        } catch (\Throwable $e) {
+            $output->writeln('<error>History pruning failed: '.$e->getMessage().'</error>');
+        }
     }
 
     /** @return list<string> */

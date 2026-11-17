@@ -21,6 +21,10 @@ class TagValue
     #[ORM\Column(type: 'datetime_immutable')]
     public \DateTimeImmutable $observedAt;
 
+    /** Horodatage du dernier échantillon écrit dans l'historique (limite la cadence d'écriture). */
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    public ?\DateTimeImmutable $sampledAt = null;
+
     public function __construct(Tag $tag, mixed $value, ?\DateTimeImmutable $observedAt = null)
     {
         $this->tag = $tag;

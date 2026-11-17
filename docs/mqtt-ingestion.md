@@ -55,6 +55,12 @@ node tools/uns-simulator/simulator.mjs --retain   # profile "uns"
 
 `app:uns:provision` (development only) creates one source per asset (key = relative asset path in lowercase joined with `-`, topic prefix = asset topic) and one tag per learned variable (`boolean`, `string`, or `float` for numbers). Sources are created **disabled** unless `--enable` is given. Existing sources and tags are left untouched, so the command is idempotent.
 
+## History
+
+Besides the latest value (`tag_value`), numeric and boolean samples (booleans as 0/1) are appended to `tag_sample`. Text values are not historised. To bound the volume, a sample is written when the value changes, for the first sample, or when at least 10 seconds have passed since the last stored sample of that tag; the current value is always updated. A write failure of the history never loses the current value.
+
+`GET /api/tags/{id}/history?range=15m|1h|6h|24h|7d&points=10..300` returns the series aggregated by regular buckets (`avg`, `min`, `max`, `n` per bucket, at most 300 points) for members of the tag's workspace (401 anonymous, 404 otherwise). It relies on `date_bin` (PostgreSQL 14+). Samples older than `TELEMETRY_RETENTION_DAYS` (default 7, 1 to 365) are purged by the consumer at startup and then hourly. The `chart` widget of the dashboard displays this series with a text summary and a data table.
+
 ## Broker connection
 
 The consumer reads its connection from environment variables (never from command-line arguments, which are visible in the process list):
@@ -65,6 +71,7 @@ The consumer reads its connection from environment variables (never from command
 | `MQTT_PORT` | `1883` | Broker port |
 | `MQTT_TLS` | off | `1` to encrypt the connection (system certificate authorities) |
 | `MQTT_CAFILE` | — | PEM file of a private certificate authority (implies TLS) |
+| `TELEMETRY_RETENTION_DAYS` | `7` | Retention of the tag history, in days (1 to 365) |
 | `UNS_ALLOWED_PREFIXES` | — | UNS prefixes the administration API may explore and provision (comma-separated). Required in production (see `docs/uns-inference.md`) |
 | `MQTT_USERNAME`, `MQTT_PASSWORD` | — | Credentials, to be set together. Passed to `mosquitto_sub` through a temporary `0600` options file removed on exit |
 
