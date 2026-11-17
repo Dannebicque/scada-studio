@@ -9,6 +9,8 @@ const props = defineProps<{
   unit: string | null
   state: MeasureState
   observedAt: string
+  /** Niveau du titre (h2–h6) : à adapter au contexte pour garder un plan de page cohérent. */
+  headingLevel?: number
 }>()
 const { locale, t } = useAppLocale()
 const numberFormat = computed(() => new Intl.NumberFormat(locale.value === 'fr' ? 'fr-FR' : 'en-GB', { maximumFractionDigits: 2 }))
@@ -31,7 +33,7 @@ const dotClass = computed(() => props.state === 'good' ? 'bg-emerald-600' : prop
 <template>
   <article class="h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <div class="flex items-start justify-between gap-2">
-      <h3 class="text-sm font-medium text-slate-700">{{ title }}</h3>
+      <component :is="'h' + Math.min(6, Math.max(2, headingLevel ?? 3))" class="text-sm font-medium text-slate-700">{{ title }}</component>
       <slot name="actions" />
     </div>
 

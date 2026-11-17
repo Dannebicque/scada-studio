@@ -29,6 +29,8 @@ final class UnsExplorerController extends AbstractController
                 $items[] = [
                     'tagId' => $tag->id, 'sourceId' => $source->id,
                     'path' => $workspace->slug.'/'.$source->key.'/'.$tag->key,
+                    // Préfixe UNS réel (hiérarchie ISA-95) : la clé de source est aplatie, le topic non.
+                    'topic' => $source->topicPrefix,
                     'name' => $tag->name, 'valueType' => $tag->valueType,
                     'unit' => $tag->unit?->symbol,
                 ];
