@@ -1,0 +1,16 @@
+{
+  "enterprise": "acme",
+  "site": "atelier",
+  "assets": [
+    {
+      "path": "atelier/automate-01",
+      "source": "automate-01",
+      "tags": [
+        { "name": "temperature", "type": "number", "shape": "sine", "unit": "°C", "min": 10, "max": 40, "base": 22, "amplitude": 3, "period": 120, "noise": 0.2 },
+        { "name": "humidite", "type": "number", "shape": "walk", "unit": "%", "min": 20, "max": 90, "base": 45, "step": 0.6, "decimals": 1 },
+        { "name": "pieces_produites", "type": "number", "shape": "counter", "step": 3, "decimals": 0 },
+        { "name": "convoyeur_actif", "type": "boolean", "toggleProb": 0.02, "initial": true }
+      ]
+    }
+  ]
+}

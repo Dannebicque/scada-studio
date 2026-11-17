@@ -1,0 +1,45 @@
+{
+  "enterprise": "acme",
+  "site": "troyes",
+  "assets": [
+    {
+      "path": "packaging/line1/filler",
+      "tags": [
+        { "name": "state", "type": "enum", "values": ["RUNNING", "IDLE", "FAULT", "STARTING"], "weights": [80, 10, 3, 7], "changeProb": 0.03 },
+        { "name": "running", "type": "boolean", "toggleProb": 0.01, "initial": true },
+        { "name": "temperature", "type": "number", "shape": "sine", "unit": "°C", "min": 0, "max": 100, "base": 65, "amplitude": 5, "period": 90, "noise": 0.4 },
+        { "name": "pressure", "type": "number", "shape": "walk", "unit": "bar", "min": 0, "max": 10, "base": 6, "step": 0.08 },
+        { "name": "speed", "type": "number", "shape": "sine", "unit": "rpm", "min": 0, "max": 1800, "base": 1200, "amplitude": 150, "period": 60, "noise": 8, "decimals": 0 },
+        { "name": "produced_count", "type": "number", "shape": "counter", "unit": "pcs", "step": 12, "decimals": 0 },
+        { "name": "batch_id", "type": "string", "values": ["B-2026-1101", "B-2026-1102", "B-2026-1103"], "changeProb": 0.005, "every": 5 },
+        { "name": "alarm_overtemp", "type": "boolean", "toggleProb": 0.004, "initial": false, "severity": "high" }
+      ]
+    },
+    {
+      "path": "packaging/line1/conveyor",
+      "tags": [
+        { "name": "running", "type": "boolean", "toggleProb": 0.008, "initial": true },
+        { "name": "speed", "type": "number", "shape": "sine", "unit": "m/s", "min": 0, "max": 2, "base": 1.1, "amplitude": 0.2, "period": 45, "noise": 0.02, "decimals": 2 },
+        { "name": "motor_current", "type": "number", "shape": "walk", "unit": "A", "min": 0, "max": 30, "base": 12, "step": 0.4 },
+        { "name": "door_open", "type": "boolean", "toggleProb": 0.01, "initial": false }
+      ]
+    },
+    {
+      "path": "utilities/boiler",
+      "tags": [
+        { "name": "temperature", "type": "number", "shape": "sine", "unit": "°C", "min": 20, "max": 180, "base": 140, "amplitude": 10, "period": 150, "noise": 0.6 },
+        { "name": "pressure", "type": "number", "shape": "walk", "unit": "bar", "min": 0, "max": 16, "base": 9, "step": 0.1 },
+        { "name": "water_level", "type": "number", "shape": "walk", "unit": "%", "min": 0, "max": 100, "base": 70, "step": 0.8, "decimals": 1 },
+        { "name": "burner_on", "type": "boolean", "toggleProb": 0.02, "initial": true }
+      ]
+    },
+    {
+      "path": "utilities/compressor",
+      "tags": [
+        { "name": "state", "type": "enum", "values": ["LOADED", "UNLOADED", "STOPPED"], "weights": [60, 35, 5], "changeProb": 0.04 },
+        { "name": "outlet_pressure", "type": "number", "shape": "sine", "unit": "bar", "min": 0, "max": 12, "base": 7.5, "amplitude": 0.6, "period": 40, "noise": 0.05 },
+        { "name": "energy", "type": "number", "shape": "counter", "unit": "kWh", "step": 0.9, "decimals": 1 }
+      ]
+    }
+  ]
+}

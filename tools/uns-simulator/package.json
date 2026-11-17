@@ -1,0 +1,16 @@
+{
+  "name": "uns-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulateur de trames MQTT/UNS (ISA-95) pour tester l'ingestion et l'inférence d'interface de SCADA Studio",
+  "type": "module",
+  "bin": { "uns-simulator": "./simulator.mjs" },
+  "scripts": {
+    "start": "node simulator.mjs",
+    "start:embedded": "node simulator.mjs --embedded-broker",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "mqtt": "^5.10.0" },
+  "optionalDependencies": { "aedes": "^0.51.3", "ws": "^8.18.0" }
+}
