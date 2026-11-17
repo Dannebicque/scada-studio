@@ -14,6 +14,15 @@ Studio web modulaire de supervision industrielle : tableaux de bord temps réel,
 ## Roadmap
 Voir [la roadmap](docs/roadmap.md), [l'architecture](docs/architecture.md), [les points d'extension](docs/extension-points.md) et [les modules](docs/modules.md).
 
+## Démarrage local
+
+```bash
+make setup   # une fois : dépendances, Docker (PostgreSQL + Mosquitto), migrations
+make dev     # tout lancer : infra, migrations, API, web, consommateur MQTT, simulateur
+```
+
+`make dev` affiche les journaux de chaque processus préfixés (`api`, `web`, `mqtt`, `sim`) et `Ctrl+C` les arrête tous (Docker reste actif : `make down`). Prérequis : Docker, PHP, Node ≥ 20 et `mosquitto_sub`. Variantes : `make dev-uns` (simulateur en topics UNS profonds), ou `make dev ARGS="--embedded"` (broker embarqué sans conteneur Mosquitto). `node scripts/dev.mjs --help` liste toutes les options.
+
 ## Contribuer
 Voir [CONTRIBUTING.md](CONTRIBUTING.md). Les tâches sont suivies dans [GitHub Issues](https://github.com/Dannebicque/scada-studio/issues). Les lots sont identifiés par le préfixe de titre `[L1]` à `[L6]` (milestones GitHub à configurer lorsque l'API le permettra).
 

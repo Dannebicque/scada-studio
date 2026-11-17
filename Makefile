@@ -2,11 +2,13 @@ SHELL := /bin/sh
 .DEFAULT_GOAL := help
 COMPOSE = docker compose --env-file .env -f infra/compose.yaml
 
-.PHONY: help env install up down ps logs migrate setup api web test typecheck build docs check
+.PHONY: help env install up down ps logs migrate setup dev dev-uns api web test typecheck build docs check
 
 help:
 	@echo "SCADA Studio commands:"
 	@echo "  make setup       Install, start PostgreSQL/MQTT, run migrations"
+	@echo "  make dev         Start everything: infra, migrations, API, web, MQTT consumer, simulator"
+	@echo "  make dev-uns     Same, with the simulator in UNS (ISA-95) profile"
 	@echo "  make api         Start Symfony API (port 8000)"
 	@echo "  make web         Start Nuxt frontend"
 	@echo "  make up/down     Start/stop Docker infrastructure"
@@ -37,7 +39,13 @@ migrate:
 
 setup: env install up
 	@if [ ! -f apps/api/.env.local ]; then printf '%s\n' 'DATABASE_URL="postgresql://scada:replace-with-a-local-development-password@127.0.0.1:5432/scada?serverVersion=17&charset=utf8"' > apps/api/.env.local; echo 'Edit apps/api/.env.local to match POSTGRES_PASSWORD in .env, then run make migrate.'; else $(MAKE) migrate; fi
-	@echo "Start two terminals: make api and make web"
+	@echo "Then run: make dev (or two terminals: make api and make web)"
+
+dev:
+	node scripts/dev.mjs $(ARGS)
+
+dev-uns:
+	node scripts/dev.mjs --uns $(ARGS)
 
 api:
 	cd apps/api && php -S 127.0.0.1:8000 -t public public/index.php
