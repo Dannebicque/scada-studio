@@ -1,6 +1,6 @@
 # MQTT ingestion — local development
 
-This initial implementation consumes QoS 0 messages from Mosquitto on `127.0.0.1:1883` using the `mosquitto_sub` CLI. It is not enabled in production.
+This implementation consumes QoS 0 messages from an MQTT broker using the `mosquitto_sub` CLI. By default it targets Mosquitto on `127.0.0.1:1883` (anonymous, local development). See "Broker connection" to target another broker.
 
 ## Prerequisites
 
@@ -42,7 +42,7 @@ The source must exist, be enabled, and have connector type `mqtt`. Values must m
 Besides the legacy contract, a source can declare a **topic prefix** (`data_source.topic_prefix`, unique across the instance). A message published on `{prefix}/{tagKey}` updates the matching tag, e.g. prefix `acme/troyes/packaging/line1/filler` and topic `acme/troyes/packaging/line1/filler/temperature`.
 
 - Topics have 2 to 12 segments, each `[a-zA-Z0-9_-]{1,100}`. The first segment `scada` is reserved for the legacy 4-segment contract and cannot be used as a prefix.
-- The consumer subscribes to `scada/+/+/+` plus one `{prefix}/+` filter per **enabled** MQTT source with a prefix (200 at most). It never subscribes to `#`. Filters are computed when the consumer (re)starts: restart it after adding or enabling a source.
+- The consumer subscribes to `scada/+/+/+` plus one `{prefix}/+` filter per **enabled** MQTT source with a prefix (200 at most). It never subscribes to `#`. The catalogue is re-read every 30 seconds and the subscriber is restarted when the filters change, so a source added or enabled is picked up without restarting the consumer.
 - Payload: same `value` / optional `observedAt`. Extra fields (`unit`, `valueType`) are ignored. A `quality` field other than `"good"` makes the sample ignored, so the value becomes stale instead of being shown as fresh. One-JSON-per-asset payloads (`{"tags": {…}}`) are not ingested.
 - Apply the migration (`php bin/console doctrine:migrations:migrate`), then create sources and tags from an inferred model:
 
@@ -55,9 +55,25 @@ node tools/uns-simulator/simulator.mjs --retain   # profile "uns"
 
 `app:uns:provision` (development only) creates one source per asset (key = relative asset path in lowercase joined with `-`, topic prefix = asset topic) and one tag per learned variable (`boolean`, `string`, or `float` for numbers). Sources are created **disabled** unless `--enable` is given. Existing sources and tags are left untouched, so the command is idempotent.
 
+## Broker connection
+
+The consumer reads its connection from environment variables (never from command-line arguments, which are visible in the process list):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MQTT_HOST` | `127.0.0.1` | Broker host name or address |
+| `MQTT_PORT` | `1883` | Broker port |
+| `MQTT_TLS` | off | `1` to encrypt the connection (system certificate authorities) |
+| `MQTT_CAFILE` | — | PEM file of a private certificate authority (implies TLS) |
+| `MQTT_USERNAME`, `MQTT_PASSWORD` | — | Credentials, to be set together. Passed to `mosquitto_sub` through a temporary `0600` options file removed on exit |
+
+In `APP_ENV=prod` the consumer refuses to start unless `MQTT_HOST` is set, and refuses an unencrypted connection to a non-loopback broker. Use a dedicated account whose ACL allows **read only** on the prefixes you ingest. Secrets belong in `.env.local` or the Symfony secrets vault, not in `.env`.
+
+The `-o` options-file mechanism of `mosquitto_sub` has not been exercised against an authenticated broker in this repository's tests: check it on your broker before relying on it.
+
 ## Limitations
 
-The subscriber is intended for local prototyping, not production. It uses an anonymous broker bound to localhost, a basic bounded restart delay but no production-grade process supervisor, no persistent message history, and 5-second client polling. Do not expose the broker publicly. Production requires TLS/authentication, operational monitoring, and a proper MQTT client library. Historical retention is deferred to the persistence milestone.
+The subscriber is still a prototype: a basic bounded restart delay but no production-grade process supervisor, no persistent message history, and 5-second client polling. Do not expose a development broker publicly. Production also requires operational monitoring and, ideally, a native MQTT client library instead of the `mosquitto_sub` subprocess. Historical retention is deferred to the persistence milestone.
 
 ## Reconnection and graceful shutdown smoke test
 

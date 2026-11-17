@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Telemetry\MqttConnection;
 use App\Telemetry\MqttSubscriptionResolver;
 use App\Telemetry\TelemetryIngestor;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -11,9 +12,12 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'app:mqtt:consume', description: 'Consume local MQTT telemetry with mosquitto_sub.')]
+#[AsCommand(name: 'app:mqtt:consume', description: 'Consume MQTT telemetry with mosquitto_sub (connection from MQTT_* environment variables).')]
 final class ConsumeMqttCommand extends Command
 {
+    /** Intervalle de relecture du catalogue : une source activée est prise en compte sans redémarrage. */
+    private const REFRESH_SECONDS = 30;
+
     private bool $stopping = false;
 
     public function __construct(
@@ -25,9 +29,23 @@ final class ConsumeMqttCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? 'prod') === 'prod') {
-            $output->writeln('<error>This prototype consumer is for development only.</error>');
-            return Command::FAILURE;
+        $environment = array_merge(getenv(), $_SERVER, $_ENV);
+        try {
+            $connection = MqttConnection::fromEnv($environment);
+        } catch (\InvalidArgumentException $e) {
+            $output->writeln('<error>'.$e->getMessage().'</error>');
+            return Command::INVALID;
+        }
+        if (($environment['APP_ENV'] ?? 'prod') === 'prod') {
+            // En production, rien n'est implicite : le broker doit être désigné, et un broker distant chiffré.
+            if (!$connection->explicit) {
+                $output->writeln('<error>Set MQTT_HOST to run the consumer in production.</error>');
+                return Command::FAILURE;
+            }
+            if (!$connection->isLoopback() && !$connection->tls) {
+                $output->writeln('<error>Refusing an unencrypted connection to a remote broker: set MQTT_TLS=1 (and MQTT_CAFILE for a private CA).</error>');
+                return Command::FAILURE;
+            }
         }
 
         $this->stopping = false;
@@ -39,29 +57,22 @@ final class ConsumeMqttCommand extends Command
 
         $attempt = 0;
         while (!$this->stopping) {
-            // Recalculé à chaque (re)connexion : une source UNS ajoutée est prise en compte au prochain redémarrage.
-            try {
-                $filters = $this->subscriptions->topicFilters();
-            } catch (\Throwable $e) {
-                $output->writeln('<error>Cannot load UNS subscriptions, using legacy topics only: '.$e->getMessage().'</error>');
-                $filters = [MqttSubscriptionResolver::LEGACY_FILTER];
-            }
-            $topicArgs = [];
-            foreach ($filters as $filter) {
-                array_push($topicArgs, '-t', $filter);
-            }
-
+            // Relu à chaque (re)connexion, puis toutes les REFRESH_SECONDS pendant l'écoute.
+            $filters = $this->currentFilters($output);
+            $optionsFile = $this->writeOptionsFile($connection);
             try {
                 $process = proc_open(
-                ['mosquitto_sub', '-h', '127.0.0.1', '-p', '1883', '-q', '0', ...$topicArgs, '-F', '%t %p'],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
+                    $connection->subscriberArguments($filters, $optionsFile),
+                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                    $pipes,
                 );
             } catch (\Throwable $e) {
+                $this->removeOptionsFile($optionsFile);
                 $output->writeln('<error>Cannot start mosquitto_sub: '.$e->getMessage().'</error>');
                 return Command::FAILURE;
             }
             if (!is_resource($process)) {
+                $this->removeOptionsFile($optionsFile);
                 $output->writeln('<error>Cannot start mosquitto_sub. Install mosquitto clients.</error>');
                 return Command::FAILURE;
             }
@@ -69,8 +80,10 @@ final class ConsumeMqttCommand extends Command
             fclose($pipes[0]);
             stream_set_blocking($pipes[1], false);
             stream_set_blocking($pipes[2], false);
-            $output->writeln('<info>Listening for MQTT telemetry on localhost:1883 ('.count($filters).' topic filter(s)). Press Ctrl+C to stop.</info>');
+            $output->writeln('<info>Listening on '.$connection->describe().' ('.count($filters).' topic filter(s)). Press Ctrl+C to stop.</info>');
             $startedAt = time();
+            $nextRefresh = $startedAt + self::REFRESH_SECONDS;
+            $reload = false;
             $buffer = '';
             $error = '';
 
@@ -114,22 +127,35 @@ final class ConsumeMqttCommand extends Command
                             }
                         }
                     }
+                    if (time() >= $nextRefresh) {
+                        $nextRefresh = time() + self::REFRESH_SECONDS;
+                        if ($this->currentFilters($output) !== $filters) {
+                            $output->writeln('<info>Subscriptions changed, reloading.</info>');
+                            $reload = true;
+                            break;
+                        }
+                    }
                     $status = proc_get_status($process);
                     if (!$status['running'] && feof($pipes[1]) && feof($pipes[2])) {
                         break;
                     }
                 }
             } finally {
-                if ($this->stopping) {
+                if ($this->stopping || $reload) {
                     proc_terminate($process);
                 }
                 fclose($pipes[1]);
                 fclose($pipes[2]);
                 $code = proc_close($process);
+                $this->removeOptionsFile($optionsFile);
             }
 
             if ($this->stopping) {
                 break;
+            }
+            if ($reload) {
+                $attempt = 0;
+                continue;
             }
             $attempt = time() - $startedAt > 60 ? 0 : min($attempt + 1, 6);
             $delay = min(30, 2 ** $attempt);
@@ -142,5 +168,40 @@ final class ConsumeMqttCommand extends Command
 
         $output->writeln('<info>MQTT consumer stopped.</info>');
         return Command::SUCCESS;
+    }
+
+    /** @return list<string> */
+    private function currentFilters(OutputInterface $output): array
+    {
+        try {
+            return $this->subscriptions->topicFilters();
+        } catch (\Throwable $e) {
+            $output->writeln('<error>Cannot load UNS subscriptions, using legacy topics only: '.$e->getMessage().'</error>');
+            return [MqttSubscriptionResolver::LEGACY_FILTER];
+        }
+    }
+
+    /** Fichier temporaire 0600 contenant les identifiants, pour qu'ils ne figurent pas dans la liste des processus. */
+    private function writeOptionsFile(MqttConnection $connection): ?string
+    {
+        $contents = $connection->optionsFileContents();
+        if ($contents === null) {
+            return null;
+        }
+        $path = tempnam(sys_get_temp_dir(), 'scada-mqtt-');
+        if ($path === false) {
+            throw new \RuntimeException('Cannot create the MQTT options file.');
+        }
+        chmod($path, 0600);
+        file_put_contents($path, $contents);
+
+        return $path;
+    }
+
+    private function removeOptionsFile(?string $path): void
+    {
+        if ($path !== null && is_file($path)) {
+            @unlink($path);
+        }
     }
 }

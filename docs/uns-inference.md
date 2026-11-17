@@ -41,7 +41,7 @@ Les topics hiérarchiques sont ingérés via le préfixe de topic d'une source (
 ## Limites
 
 - Le préfixe de topic est unique sur toute l'instance : deux workspaces ne peuvent pas ingérer le même topic.
-- Les abonnements du consommateur sont calculés au démarrage : redémarrer après ajout ou activation d'une source.
+- Les abonnements du consommateur sont relus toutes les 30 s : une source ajoutée ou activée est prise en compte sans redémarrage.
 - Le mode « un JSON par asset » du simulateur et de `uns-infer` n'est pas ingéré (seulement inféré).
 - Les tests d'intégration PHP (`UnsIngestionIntegrationTest`) exigent PostgreSQL `_test` ; la CI backend les exécute.
 - L'import n'écrit pas de layout : la grille de la page inférée sert à l'aperçu ; le dashboard personnel conserve l'ordre de lecture.
