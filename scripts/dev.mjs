@@ -147,7 +147,8 @@ function shutdown(code = 0) {
 process.on('SIGINT', () => shutdown(0))
 process.on('SIGTERM', () => shutdown(0))
 
-start('api', 'php', ['-S', '127.0.0.1:8000', '-t', 'public', 'public/index.php'], { cwd: join(root, 'apps/api') })
+// Plusieurs workers : la découverte UNS dure jusqu'à 30 s et ne doit pas bloquer les autres requêtes.
+start('api', 'php', ['-S', '127.0.0.1:8000', '-t', 'public', 'public/index.php'], { cwd: join(root, 'apps/api'), env: { PHP_CLI_SERVER_WORKERS: '4' } })
 start('web', 'npm', ['run', 'dev:web'])
 if (!args.has('--no-consumer')) {
   start('mqtt', 'php', ['bin/console', 'app:mqtt:consume'], { cwd: join(root, 'apps/api'), critical: false })

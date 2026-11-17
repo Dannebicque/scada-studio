@@ -59,7 +59,7 @@ final class ConsumeMqttCommand extends Command
         while (!$this->stopping) {
             // Relu à chaque (re)connexion, puis toutes les REFRESH_SECONDS pendant l'écoute.
             $filters = $this->currentFilters($output);
-            $optionsFile = $this->writeOptionsFile($connection);
+            $optionsFile = $connection->createOptionsFile();
             try {
                 $process = proc_open(
                     $connection->subscriberArguments($filters, $optionsFile),
@@ -67,12 +67,12 @@ final class ConsumeMqttCommand extends Command
                     $pipes,
                 );
             } catch (\Throwable $e) {
-                $this->removeOptionsFile($optionsFile);
+                MqttConnection::removeOptionsFile($optionsFile);
                 $output->writeln('<error>Cannot start mosquitto_sub: '.$e->getMessage().'</error>');
                 return Command::FAILURE;
             }
             if (!is_resource($process)) {
-                $this->removeOptionsFile($optionsFile);
+                MqttConnection::removeOptionsFile($optionsFile);
                 $output->writeln('<error>Cannot start mosquitto_sub. Install mosquitto clients.</error>');
                 return Command::FAILURE;
             }
@@ -147,7 +147,7 @@ final class ConsumeMqttCommand extends Command
                 fclose($pipes[1]);
                 fclose($pipes[2]);
                 $code = proc_close($process);
-                $this->removeOptionsFile($optionsFile);
+                MqttConnection::removeOptionsFile($optionsFile);
             }
 
             if ($this->stopping) {
@@ -178,30 +178,6 @@ final class ConsumeMqttCommand extends Command
         } catch (\Throwable $e) {
             $output->writeln('<error>Cannot load UNS subscriptions, using legacy topics only: '.$e->getMessage().'</error>');
             return [MqttSubscriptionResolver::LEGACY_FILTER];
-        }
-    }
-
-    /** Fichier temporaire 0600 contenant les identifiants, pour qu'ils ne figurent pas dans la liste des processus. */
-    private function writeOptionsFile(MqttConnection $connection): ?string
-    {
-        $contents = $connection->optionsFileContents();
-        if ($contents === null) {
-            return null;
-        }
-        $path = tempnam(sys_get_temp_dir(), 'scada-mqtt-');
-        if ($path === false) {
-            throw new \RuntimeException('Cannot create the MQTT options file.');
-        }
-        chmod($path, 0600);
-        file_put_contents($path, $contents);
-
-        return $path;
-    }
-
-    private function removeOptionsFile(?string $path): void
-    {
-        if ($path !== null && is_file($path)) {
-            @unlink($path);
         }
     }
 }

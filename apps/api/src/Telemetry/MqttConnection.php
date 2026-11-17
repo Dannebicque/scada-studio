@@ -37,7 +37,10 @@ final class MqttConnection
             throw new \InvalidArgumentException('MQTT_HOST is not a valid host name or address.');
         }
 
-        $rawPort = self::string($env, 'MQTT_PORT') ?? '1883';
+        $cafile = self::string($env, 'MQTT_CAFILE');
+        $tls = in_array(strtolower(self::string($env, 'MQTT_TLS') ?? ''), ['1', 'true', 'yes', 'on'], true) || $cafile !== null;
+
+        $rawPort = self::string($env, 'MQTT_PORT') ?? ($tls ? '8883' : '1883');
         if (!ctype_digit($rawPort) || (int) $rawPort < 1 || (int) $rawPort > 65535) {
             throw new \InvalidArgumentException('MQTT_PORT must be between 1 and 65535.');
         }
@@ -53,10 +56,40 @@ final class MqttConnection
             }
         }
 
-        $cafile = self::string($env, 'MQTT_CAFILE');
-        $tls = in_array(strtolower(self::string($env, 'MQTT_TLS') ?? ''), ['1', 'true', 'yes', 'on'], true) || $cafile !== null;
-
         return new self($host, (int) $rawPort, $username, $password, $tls, $cafile, $explicit);
+    }
+
+    /** Environnement du processus (variables réelles, puis .env chargé par Symfony). */
+    public static function fromProcessEnvironment(): self
+    {
+        return self::fromEnv(array_merge(getenv(), $_SERVER, $_ENV));
+    }
+
+    /**
+     * Crée le fichier d'options 0600 contenant les identifiants (null si le broker est anonyme).
+     * L'appelant le supprime avec removeOptionsFile() dès que mosquitto_sub est arrêté.
+     */
+    public function createOptionsFile(): ?string
+    {
+        $contents = $this->optionsFileContents();
+        if ($contents === null) {
+            return null;
+        }
+        $path = tempnam(sys_get_temp_dir(), 'scada-mqtt-');
+        if ($path === false) {
+            throw new \RuntimeException('Cannot create the MQTT options file.');
+        }
+        chmod($path, 0600);
+        file_put_contents($path, $contents);
+
+        return $path;
+    }
+
+    public static function removeOptionsFile(?string $path): void
+    {
+        if ($path !== null && is_file($path)) {
+            @unlink($path);
+        }
     }
 
     public function isLoopback(): bool

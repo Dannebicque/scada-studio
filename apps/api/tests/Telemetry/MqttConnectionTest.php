@@ -45,11 +45,12 @@ final class MqttConnectionTest extends TestCase
         self::assertSame("-u \"scada-ro\"\n-P \"s3cr\\\"et\\\\\"\n", $connection->optionsFileContents());
     }
 
-    public function testPrivateCertificateAuthorityImpliesTls(): void
+    public function testPrivateCertificateAuthorityImpliesTlsAndDefaultTlsPort(): void
     {
         $connection = MqttConnection::fromEnv(['MQTT_HOST' => 'mqtt.internal', 'MQTT_CAFILE' => '/etc/scada/ca.pem']);
 
         self::assertTrue($connection->tls);
+        self::assertSame(8883, $connection->port);
         self::assertContains('--cafile', $connection->subscriberArguments([]));
     }
 

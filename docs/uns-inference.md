@@ -13,6 +13,20 @@ MQTT/UNS ──► tools/uns-infer ──► page.json (page.schema.json) ──
 2. **Inférence** : `tools/uns-infer` écoute le broker (ou un fichier), apprend type, unité, plage, cadence et comportement de compteur de chaque tag, puis génère `uns-model.json` et une page par area.
 3. **Import** : la page web `/uns-import` charge le JSON, le valide (1 Mo, 300 éléments, `schemaVersion: 1`, `kind: dashboard`), l'affiche sans rien exécuter, associe chaque élément à un tag du catalogue et crée un dashboard personnel après confirmation. Le tableau créé est affiché sur `/dashboard` (liste « Mes tableaux », ou lien « Afficher » de Mon espace) avec un rendu par type : valeur, jauge (`%`), voyant d'état ; le type `chart` affiche la dernière valeur en attendant l'historique.
 
+## Découverte depuis l'API (sans console)
+
+Pour un serveur sans accès console, l'inférence et l'activation sont aussi exposées par l'API, réservées aux **propriétaires** du workspace et protégées par jeton CSRF (même mécanisme que la gestion des membres) :
+
+| Route | Rôle |
+| --- | --- |
+| `GET /api/workspaces/{id}/uns/discovery/csrf` | Jeton CSRF, état (`enabled`) et adresse du broker configuré |
+| `POST /api/workspaces/{id}/uns/discover` `{prefix, seconds}` | Écoute `{prefix}/#` pendant 5 à 30 s et renvoie `{frames, truncated, model, pages}`. Rien n'est enregistré |
+| `POST /api/workspaces/{id}/uns/provision` `{model, topics, enable}` | Crée sources et tags pour les assets sélectionnés (`topics`), désactivés sauf `enable: true` |
+
+Le broker est celui du serveur (variables `MQTT_*`, voir `docs/mqtt-ingestion.md`) : l'API n'accepte **jamais** d'adresse en entrée, ce qui évite qu'un compte compromis fasse sonder le réseau interne. Les préfixes explorables sont limités par `UNS_ALLOWED_PREFIXES` (ex. `acme/troyes,acme/lyon`) : sans cette liste, tout préfixe valide est accepté en développement et **aucun en production**. Le préfixe `scada` reste réservé. L'inférence est un port PHP de `tools/uns-infer` ; les deux donnent le même modèle sur les mêmes trames.
+
+Un préfixe n appartient qu à un seul workspace pour toute l instance : la liste blanche qui empêche un propriétaire de s'abonner à des topics qui ne sont pas les siens.
+
 ## Correspondance des widgets
 
 | Proposé par l'inférence | Widget personnel (API) |
